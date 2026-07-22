@@ -401,3 +401,26 @@ tests/test_stage15.py::test_robot_durability_and_energy_tracking PASSED  [100%]
 ============================== 3 passed in 0.32s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: `Robot` segment health is currently tracked per segment; adding localized armor plating sub-zones will allow direction-dependent impact damage reduction.
+
+### Stage 16 — Robot Presets & Scene Test — 2026-07-22
+
+- What was built: Lightweight fighter preset (`robots/presets/lightweight_fighter.json`), Heavy tank fighter preset (`robots/presets/heavy_tank.json`), simulation benchmark runner (`scripts/robot_scene_test.py`), and test suite (`tests/test_stage16.py`).
+- Key design decision (and why): Evaluated preset dynamic tradeoffs in a shared physics world under identical motor torque inputs to empirically verify that mass differences directly drive real acceleration and speed variations.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage16.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage16.py::test_robot_presets_loading_and_simulation PASSED  [ 33%]
+tests/test_stage16.py::test_lightweight_vs_heavy_speed_performance_tradeoff PASSED [ 66%]
+tests/test_stage16.py::test_data_driven_preset_modification PASSED       [100%]
+
+============================== 3 passed in 0.30s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Lightweight fighter reaches higher speed under high acceleration; adding active weapon recoil forces in Stage 18 will further test chassis stability.

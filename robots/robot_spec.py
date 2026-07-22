@@ -1,6 +1,7 @@
 """Robot spec data model extending creature morphology with physical components and durability tracking."""
 from __future__ import annotations
 import json
+from dataclasses import asdict
 from typing import Any
 from physics.vec2 import Vec2
 from physics.world import World
@@ -52,12 +53,15 @@ class RobotSpec(CreatureSpec):
         return capacity if capacity > 0 else 100.0
 
     def to_dict(self) -> dict[str, Any]:
-        data = super().to_dict()
-        data["components"] = {
-            seg_id: [c.to_dict() for c in comp_list]
-            for seg_id, comp_list in self.components.items()
+        return {
+            "name": self.name,
+            "segments": [asdict(s) for s in self.segments],
+            "joints": [asdict(j) for j in self.joints],
+            "components": {
+                seg_id: [c.to_dict() for c in comp_list]
+                for seg_id, comp_list in self.components.items()
+            },
         }
-        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RobotSpec:
@@ -85,11 +89,8 @@ class Robot(Creature):
     """Runtime Robot instance extending Creature with health/durability pools and energy management."""
 
     def __init__(self, spec: RobotSpec, creature: Creature) -> None:
+        super().__init__(creature.spec, creature.bodies, creature.joints, creature.base_position)
         self.robot_spec = spec
-        # Copy underlying physics body references
-        self.main_body = creature.main_body
-        self.bodies = creature.bodies
-        self.joints = creature.joints
 
         # Initialize durability (health) per segment
         self.segment_health: dict[str, float] = {}

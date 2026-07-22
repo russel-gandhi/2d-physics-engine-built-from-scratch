@@ -1,0 +1,68 @@
+{
+  "name": "Lightweight Fighter",
+  "segments": [
+    {
+      "name": "torso",
+      "shape_type": "polygon",
+      "mass": 1.2,
+      "moment_of_inertia": 0.1,
+      "relative_position": [0.0, 0.0],
+      "vertices": [
+        [-0.4, -0.2],
+        [0.4, -0.2],
+        [0.4, 0.2],
+        [-0.4, 0.2]
+      ]
+    },
+    {
+      "name": "leg",
+      "shape_type": "polygon",
+      "mass": 0.4,
+      "moment_of_inertia": 0.04,
+      "relative_position": [0.0, -0.7],
+      "vertices": [
+        [-0.1, -0.4],
+        [0.1, -0.4],
+        [0.1, 0.4],
+        [-0.1, 0.4]
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "name": "hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "leg",
+      "anchor_parent": [0.0, -0.2],
+      "anchor_child": [0.0, 0.4],
+      "max_torque": 45.0
+    }
+  ],
+  "components": {
+    "torso": [
+      {
+        "name": "Lightweight Alloy Chassis",
+        "component_type": "chassis",
+        "mass": 1.0,
+        "durability": 150.0
+      },
+      {
+        "name": "High-Efficiency Battery",
+        "component_type": "energy_system",
+        "mass": 0.5,
+        "durability": 80.0,
+        "properties": {"capacity": 300.0}
+      }
+    ],
+    "leg": [
+      {
+        "name": "High Speed Servo Motor",
+        "component_type": "motor",
+        "mass": 0.3,
+        "durability": 60.0,
+        "energy_consumption": 1.5
+      }
+    ]
+  }
+}
