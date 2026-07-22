@@ -213,3 +213,49 @@ tests/test_stage08.py::test_environment_sanity_check_execution PASSED    [100%]
 ======================== 1 passed, 2 warnings in 5.92s ========================
 ```
 - Anything that's a known rough edge / would do differently with more time: Zero action policy lets creature stand still / fall gradually (giving positive survival reward), whereas random flailing causes fast tipping (triggering early termination), confirming that locomotion reward shaping in Stage 10 will have a clear learning signal to reward forward progress over falling.
+
+### Stage 09 — PPO Integration — 2026-07-22
+
+- What was built: Stable-Baselines3 PPO training script (`rl/train_ppo.py`) with MlpPolicy configuration, model checkpointing (`models/checkpoints/`), TensorBoard logging (`logs/ppo_tb/`), and inference verification suite (`tests/test_stage09.py`).
+- Key design decision (and why): Configured SB3 PPO with periodic CheckpointCallback saving model weights every 5k timesteps so intermediate checkpoints can be replayed and evaluated in Stage 10/13.
+- Verification run (paste the actual command + result, not a description):
+```
+python -m rl.train_ppo --timesteps 5000
+Logging to logs/ppo_tb\PPO_1
+----------------------------------
+| rollout/            |          |
+|    ep_len_mean      | 25.1     |
+|    ep_rew_mean      | 0.485    |
+| time/               |          |
+|    fps              | 505      |
+|    iterations       | 10       |
+|    time_elapsed     | 10       |
+|    total_timesteps  | 5120     |
+| train/              |          |
+|    approx_kl        | 0.007421 |
+|    clip_fraction    | 0.0557   |
+|    clip_range       | 0.2      |
+|    entropy_loss     | -1.37    |
+|    explained_var    | 0.0886   |
+|    learning_rate    | 0.0003   |
+|    loss             | 0.113    |
+|    n_updates        | 90       |
+|    policy_gradient  | -0.00318 |
+|    value_loss       | 0.301    |
+----------------------------------
+
+pytest tests/test_stage09.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage09.py::test_ppo_training_pipeline_and_model_saving PASSED [ 50%]
+tests/test_stage09.py::test_ppo_model_loading_and_inference PASSED      [100%]
+
+======================== 2 passed, 2 warnings in 9.38s ========================
+```
+- Anything that's a known rough edge / would do differently with more time: Set `KMP_DUPLICATE_LIB_OK=TRUE` to resolve OpenMP/MKL multi-threading runtime library conflicts when running PyTorch and NumPy on Windows Anaconda environments.
