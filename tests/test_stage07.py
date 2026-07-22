@@ -20,7 +20,7 @@ def test_random_action_multi_episode_loop():
     env = CreatureEnv(max_episode_steps=100)
     total_steps = 0
 
-    for _ in range(5):  # 5 episodes
+    for _ in range(10):  # 10 episodes
         obs, info = env.reset()
         done = False
         while not done:
