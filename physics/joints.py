@@ -158,7 +158,7 @@ class RevoluteJoint(Joint):
         pos_err = p_b - p_a
         inv_mass_sum = self.body_a.inv_mass + self.body_b.inv_mass
         if inv_mass_sum > 1e-12:
-            corr = pos_err * 0.05
+            corr = pos_err * 0.2
             if not self.body_a.is_static:
                 self.body_a.position += corr * (self.body_a.inv_mass / inv_mass_sum)
             if not self.body_b.is_static:
