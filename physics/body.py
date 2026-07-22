@@ -14,6 +14,7 @@ class RigidBody:
         angular_velocity: float = 0.0,
         mass: float = 1.0,
         moment_of_inertia: float = 1.0,
+        shape: object | None = None,
     ) -> None:
         """Initialize a rigid body with position, velocity, orientation, and mass properties."""
         self.position: Vec2 = Vec2(position) if position is not None else Vec2(0.0, 0.0)
@@ -22,6 +23,7 @@ class RigidBody:
         self.angular_velocity: float = float(angular_velocity)
         self.mass: float = float(mass)
         self.moment_of_inertia: float = float(moment_of_inertia)
+        self.shape = shape
 
         if self.mass <= 0.0:
             self.mass = 0.0

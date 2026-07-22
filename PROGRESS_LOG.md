@@ -40,3 +40,28 @@ tests/test_stage01.py::test_static_body_does_not_move PASSED             [100%]
 ============================== 6 passed in 0.46s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: `Vec2` handles implicit conversions for tuple/list/array inputs for user convenience, but keeping all internal operations strictly typed to `Vec2` keeps physics operations fast and clean.
+
+### Stage 02 — Shapes & Collision Detection — 2026-07-22
+
+- What was built: Collision shapes (`Circle`, `Polygon`, `AABB` in `physics/shapes.py`) and broad-phase AABB filtering + narrow-phase SAT collision detection (`physics/collision.py`) returning `Contact` data structures (point, normal, penetration).
+- Key design decision (and why): Used Separating Axis Theorem (SAT) for convex polygons and circle-vs-polygon, checking edge normals and circle-to-closest-vertex axes to cleanly handle rotated geometry.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage02.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/test_stage02.py::test_circles_overlapping PASSED                   [ 20%]
+tests/test_stage02.py::test_circles_separated PASSED                     [ 40%]
+tests/test_stage02.py::test_axis_aligned_overlapping_squares PASSED      [ 60%]
+tests/test_stage02.py::test_separated_polygons_at_angle PASSED           [ 80%]
+tests/test_stage02.py::test_broad_phase_filtering PASSED                 [100%]
+
+============================== 5 passed in 0.17s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Polygon contact point estimation currently uses body center midpoint for poly-poly, which will be refined with contact manifold generation in collision resolution if multiple contact points are needed for complex stacks.
