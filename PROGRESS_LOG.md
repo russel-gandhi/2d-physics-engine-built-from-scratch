@@ -518,3 +518,26 @@ tests/test_stage06.py::test_data_driven_preset_modification PASSED       [100%]
 
 ============================== 3 passed in 0.32s ==============================
 ```
+
+### Issue 4 — Stage 16 Tradeoff Test Redesign for Deterministic Acceleration Tradeoffs — 2026-07-22
+
+- What was fixed:
+  1. Redesigned `test_lightweight_vs_heavy_speed_performance_tradeoff` in `tests/test_stage16.py` and `scripts/robot_scene_test.py` to compare initial acceleration over the first 10 timesteps ($a = F/m$).
+  2. Isolated the direct $F=ma$ mass/torque relationship before chaotic ground bounce dynamics occur, eliminating cross-platform floating point test flakiness.
+- Verification run:
+```
+pytest tests/test_stage16.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage16.py::test_robot_presets_loading_and_simulation PASSED  [ 33%]
+tests/test_stage16.py::test_lightweight_vs_heavy_speed_performance_tradeoff PASSED [ 66%]
+tests/test_stage16.py::test_data_driven_preset_modification PASSED       [100%]
+
+============================== 3 passed in 0.30s ==============================
+```

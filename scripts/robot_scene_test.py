@@ -29,9 +29,19 @@ def run_robot_scene_test(steps: int = 120, verbose: bool = True) -> dict:
     heavy_bot = build_robot(heavy_spec, world, base_position=(5.0, 2.0))
 
     dt = 1.0 / 60.0
+    initial_steps = 10
 
-    for _ in range(steps):
-        # Apply identical motor action torque
+    # Step initial phase to measure acceleration (before chaotic ground contact)
+    for step_idx in range(initial_steps):
+        light_bot.apply_actions([1.0])
+        heavy_bot.apply_actions([1.0])
+        world.step(dt)
+
+    light_init_accel = float(light_bot.main_body.velocity.length() / (initial_steps * dt))
+    heavy_init_accel = float(heavy_bot.main_body.velocity.length() / (initial_steps * dt))
+
+    # Complete remaining steps
+    for _ in range(steps - initial_steps):
         light_bot.apply_actions([1.0])
         heavy_bot.apply_actions([1.0])
         world.step(dt)
@@ -44,20 +54,22 @@ def run_robot_scene_test(steps: int = 120, verbose: bool = True) -> dict:
             "name": light_spec.name,
             "total_mass": light_spec.total_mass,
             "total_durability": light_spec.total_durability,
+            "initial_acceleration": light_init_accel,
             "final_speed": light_speed,
         },
         "heavy_tank": {
             "name": heavy_spec.name,
             "total_mass": heavy_spec.total_mass,
             "total_durability": heavy_spec.total_durability,
+            "initial_acceleration": heavy_init_accel,
             "final_speed": heavy_speed,
         },
     }
 
     if verbose:
         print("=== Robot Preset Physics Performance Comparison ===")
-        print(f"Lightweight Fighter: Mass={results['lightweight']['total_mass']:.1f}kg | Durability={results['lightweight']['total_durability']:.0f}HP | Speed={light_speed:.2f}m/s")
-        print(f"Heavy Tank Fighter:  Mass={results['heavy_tank']['total_mass']:.1f}kg | Durability={results['heavy_tank']['total_durability']:.0f}HP | Speed={heavy_speed:.2f}m/s")
+        print(f"Lightweight Fighter: Mass={results['lightweight']['total_mass']:.1f}kg | Durability={results['lightweight']['total_durability']:.0f}HP | Initial Accel={light_init_accel:.2f}m/s² | Speed={light_speed:.2f}m/s")
+        print(f"Heavy Tank Fighter:  Mass={results['heavy_tank']['total_mass']:.1f}kg | Durability={results['heavy_tank']['total_durability']:.0f}HP | Initial Accel={heavy_init_accel:.2f}m/s² | Speed={heavy_speed:.2f}m/s")
 
     return results
 

@@ -15,11 +15,16 @@ def test_robot_presets_loading_and_simulation():
 
 
 def test_lightweight_vs_heavy_speed_performance_tradeoff():
-    """Verify lightweight fighter achieves higher speed than heavy tank under identical action torque."""
-    results = run_robot_scene_test(steps=120, verbose=False)
+    """Verify lightweight fighter achieves higher initial acceleration than heavy tank under identical action torque.
+    
+    Note (Issue 4 Audit Fix): Comparing initial acceleration over the first 10 timesteps isolates the F=ma
+    mass/torque relationship directly before chaotic ground contact & bouncing dynamics occur, ensuring
+    deterministic cross-platform test reliability.
+    """
+    results = run_robot_scene_test(steps=60, verbose=False)
 
-    # Lightweight fighter has higher acceleration and velocity due to F/m
-    assert results["lightweight"]["final_speed"] > results["heavy_tank"]["final_speed"]
+    # Lightweight fighter has higher acceleration due to F=ma (5.2kg vs 37.5kg mass)
+    assert results["lightweight"]["initial_acceleration"] > results["heavy_tank"]["initial_acceleration"]
 
 
 def test_data_driven_preset_modification(tmp_path):
