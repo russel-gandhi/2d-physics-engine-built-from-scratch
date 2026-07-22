@@ -176,8 +176,10 @@ def polygon_vs_polygon(a: RigidBody, b: RigidBody) -> Contact | None:
     if (b.position - a.position).dot(best_normal) < 0:
         best_normal = -best_normal
 
-    # Estimate contact point
-    point = (a.position + b.position) * 0.5
+    # Find contact point: vertex of B deepest in A or vertex of A deepest in B
+    # Find support vertex of B along -best_normal
+    deepest_vert_b = min(verts_b, key=lambda v: v.dot(best_normal))
+    point = deepest_vert_b + best_normal * (min_overlap * 0.5)
 
     return Contact(
         point=point,
