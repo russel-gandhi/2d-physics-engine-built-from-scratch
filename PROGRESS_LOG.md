@@ -723,3 +723,26 @@ tests/test_stage25.py::test_sandbox_mode_world_reset PASSED              [100%]
 ============================== 3 passed in 0.62s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Mouse cursor click-to-spawn drag-and-drop can be added to the Pygame event loop for precise spatial positioning.
+
+### Stage 26 — Experiment Mode — 2026-07-22
+
+- What was built: Structured experiment runner (`sandbox/experiment.py`), `ExperimentConfig`, `ExperimentReport` generator with exact laboratory report formatting, gravity sweep benchmarking, and test suite (`tests/test_stage26.py`).
+- Key design decision (and why): Formulated `ExperimentReport.summary_text()` matching concept doc laboratory specifications, computing real physical displacement $\Delta x$, max height reached, and energy consumed directly from physics integration steps.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage26.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage26.py::test_experiment_repeatability PASSED              [ 33%]
+tests/test_stage26.py::test_experiment_gravity_sweep_physical_sensitivity PASSED [ 66%]
+tests/test_stage26.py::test_experiment_report_summary_text_format PASSED [100%]
+
+============================== 3 passed in 1.48s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: CSV export of experiment parameter sweeps can be added to export multi-variable metric grids for external plotting.
