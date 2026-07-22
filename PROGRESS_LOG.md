@@ -89,3 +89,27 @@ tests/test_stage03.py::test_ball_drop_settle_simulation PASSED           [100%]
 ============================== 4 passed in 0.66s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Positional correction uses simple 40% penetration push-apart per frame with a 0.01 slop threshold; for dense multi-body stacks, iterative constraint relaxation across multiple sub-steps gives even tighter stacking stability.
+
+### Stage 04 — Joints & Constraints — 2026-07-22
+
+- What was built: Joint constraint solvers (`physics/joints.py` containing `DistanceJoint` and `RevoluteJoint`) with Baumgarte bias stabilization and `motor_torque` support on revolute hinges for driving creature limbs.
+- Key design decision (and why): Formulated joint constraint impulses along local anchor world-positions with iterative relaxation per timestep, maintaining exact geometric connections between body segments.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage04.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage04.py::test_distance_joint_length_preservation PASSED    [ 25%]
+tests/test_stage04.py::test_revolute_joint_pendulum_period PASSED        [ 50%]
+tests/test_stage04.py::test_revolute_joint_motor_torque PASSED           [ 75%]
+tests/test_stage04.py::test_two_segment_chain_stability PASSED           [100%]
+
+============================== 4 passed in 2.12s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Solving 2D revolute joints sequentially per axis works well for low segment counts; for deep kinematic trees, block 2x2 matrix constraint solvers could solve both axes simultaneously.
