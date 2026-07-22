@@ -44,19 +44,20 @@ class CreatureEnv(gym.Env):
 
         if spec is None:
             preset_path = os.path.join("creatures", "presets", "hopper.json")
-            self.spec = CreatureSpec.from_json(preset_path)
+            self.creature_spec = CreatureSpec.from_json(preset_path)
         elif isinstance(spec, str):
-            self.spec = CreatureSpec.from_json(spec)
+            self.creature_spec = CreatureSpec.from_json(spec)
         else:
-            self.spec = spec
+            self.creature_spec = spec
 
+        self.spec = None
         self.render_mode = render_mode
         self.max_episode_steps = max_episode_steps
         self.frame_skip = frame_skip
 
         # Determine number of motorized joints
-        self.num_joints = len(self.spec.joints)
-        num_actions = sum(1 for j in self.spec.joints if j.joint_type == "revolute")
+        self.num_joints = len(self.creature_spec.joints)
+        num_actions = sum(1 for j in self.creature_spec.joints if j.joint_type == "revolute")
 
         self.action_space = spaces.Box(
             low=-1.0, high=1.0, shape=(num_actions,), dtype=np.float32
@@ -86,7 +87,7 @@ class CreatureEnv(gym.Env):
         ]
 
         # Joint relative angles and angular velocities
-        for j_spec in self.spec.joints:
+        for j_spec in self.creature_spec.joints:
             parent = self.creature.bodies[j_spec.parent_segment]
             child = self.creature.bodies[j_spec.child_segment]
             rel_angle = float(child.angle - parent.angle)
@@ -103,7 +104,7 @@ class CreatureEnv(gym.Env):
             if contact.body_b is not None:
                 contact_bodies.add(contact.body_b)
 
-        for j_spec in self.spec.joints:
+        for j_spec in self.creature_spec.joints:
             child = self.creature.bodies[j_spec.child_segment]
             in_contact = 1.0 if child in contact_bodies else 0.0
             obs_list.append(in_contact)
@@ -129,7 +130,7 @@ class CreatureEnv(gym.Env):
         self.world.add_body(ground)
 
         # Build creature
-        self.creature = build_creature(self.spec, self.world, base_position=(0.0, 2.0))
+        self.creature = build_creature(self.creature_spec, self.world, base_position=(0.0, 2.0))
         self.current_step = 0
 
         # Run 1 initial step to populate contacts
@@ -154,13 +155,17 @@ class CreatureEnv(gym.Env):
         obs = self._get_obs()
         torso = self.creature.main_body
 
-        # Reward: forward velocity minus small control cost
+        # Shaped Locomotion Reward
         forward_vel = float(torso.velocity.x)
+        upright_bonus = 0.1 * max(0.0, float(np.cos(torso.angle)))
+        height_bonus = 0.2 * float(torso.position.y)
         ctrl_cost = 0.001 * float(np.sum(np.square(act_array)))
-        reward = forward_vel - ctrl_cost
 
-        # Termination criteria: fell over or height dropped too low
+        # Fall penalty on termination
         terminated = bool(torso.position.y < 0.7 or abs(torso.angle) > 1.2)
+        fall_penalty = -2.0 if terminated else 0.0
+
+        reward = 1.5 * forward_vel + upright_bonus + height_bonus - ctrl_cost + fall_penalty
 
         self.current_step += 1
         truncated = bool(self.current_step >= self.max_episode_steps)
