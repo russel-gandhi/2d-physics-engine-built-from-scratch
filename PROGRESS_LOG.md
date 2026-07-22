@@ -134,7 +134,7 @@ tests/test_stage05.py::test_fixed_timestep_independence PASSED           [ 50%]
 tests/test_stage05.py::test_headless_renderer PASSED                     [ 75%]
 tests/test_stage05.py::test_run_scene_headless_execution PASSED          [100%]
 
-======================== 4 passed, 2 warnings in 1.86s =================-------
+======================== 4 passed, 2 warnings in 1.86s ========================
 ```
 - Anything that's a known rough edge / would do differently with more time: Renderer is pure Pygame primitives; adding anti-aliased surface rendering and customizable camera zoom/pan controls will enhance interactive visual exploration during creature training.
 
@@ -448,3 +448,25 @@ tests/test_stage17.py::test_high_velocity_impact_damage_simulation PASSED [100%]
 ============================== 4 passed in 0.35s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Impulse threshold is set globally; adding material hardness properties (e.g. steel vs alloy) per component will allow variable impulse damage absorption rates.
+
+### Stage 18 — Weapons — 2026-07-22
+
+- What was built: `Weapon` component class (`combat/weapons.py`) supporting `WeaponType` presets (`SPINNER`, `HAMMER`, `FLIPPER`, `RAM`), weapon damage multiplier scaling (`apply_weapon_impulse_damage`), and test suite (`tests/test_stage18.py`).
+- Key design decision (and why): Multiplied base impulse damage by `damage_multiplier` specifically when the striking body segment contains a `Weapon` component, rewarding offensive contact without hardcoding flat damage values.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage18.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage18.py::test_weapon_component_damage_multiplier_scaling PASSED [ 50%]
+tests/test_stage18.py::test_weapon_limb_swing_simulation_damage PASSED  [100%]
+
+============================== 2 passed in 0.32s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Weapons currently deal contact damage; adding active weapon speed / kinetic energy scaling ($E_k = \frac{1}{2} m v^2$) can tie damage directly to weapon tip velocity.
