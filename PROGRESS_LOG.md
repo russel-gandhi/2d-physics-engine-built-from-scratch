@@ -564,3 +564,27 @@ tests/test_stage14.py::test_saved_artifacts_present PASSED               [100%]
 
 ============================== 3 passed in 0.14s ==============================
 ```
+
+### Stage 19 — Local 1v1 Arena — 2026-07-22
+
+- What was built: `Arena` 1v1 combat simulation loop (`combat/arena.py`), relative combat observation generator (`get_observation`), damage listener registration (`DamageSystem`), and match win/loss conditions (chassis destruction, out of bounds ring out, and durability timeout).
+- Key design decision (and why): Formulated relative combat observation vectors ($x_{\text{opp}} - x_{\text{robot}}, v_{\text{opp}} - v_{\text{robot}}$) and damage-differential step rewards to provide clean RL state and learning signals for Stage 20 (`CombatEnv`).
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage19.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage19.py::test_arena_initialization_and_observation_shapes PASSED [ 25%]
+tests/test_stage19.py::test_arena_chassis_destruction_win_condition PASSED [ 50%]
+tests/test_stage19.py::test_arena_out_of_bounds_win_condition PASSED     [ 75%]
+tests/test_stage19.py::test_arena_timeout_higher_durability_win_condition PASSED [100%]
+
+============================== 4 passed in 0.33s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: `Arena` supports simultaneous motor actions for both robots; Stage 20 (`CombatEnv`) will wrap `Arena` into standard Gymnasium `Env` interface for multi-agent self-play RL training.

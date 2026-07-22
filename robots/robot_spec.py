@@ -102,6 +102,11 @@ class Robot(Creature):
         self.current_energy = self.max_energy
 
     @property
+    def total_durability(self) -> float:
+        """Sum of current remaining health across all robot segments."""
+        return float(sum(self.segment_health.values()))
+
+    @property
     def is_chassis_destroyed(self) -> bool:
         """Check if main torso chassis health has reached zero."""
         main_id = self.robot_spec.segments[0].name
