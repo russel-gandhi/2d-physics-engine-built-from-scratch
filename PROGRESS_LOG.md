@@ -746,3 +746,25 @@ tests/test_stage26.py::test_experiment_report_summary_text_format PASSED [100%]
 ============================== 3 passed in 1.48s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: CSV export of experiment parameter sweeps can be added to export multi-variable metric grids for external plotting.
+
+### Stage 27 — Battle Analytics — 2026-07-22
+
+- What was built: `BattleReport` analytics engine (`analytics/battle_report.py`), post-match damage calculation (HP & % of total), distance tracking, weapon impact contact counts, weakness heuristics detection (`low_mobility`, `slow_recovery`, `vulnerable_chassis`), and test suite (`tests/test_stage27.py`).
+- Key design decision (and why): Extracted exact post-battle diagnostics from serialized replay JSON logs, enabling automatic weakness flag detection without altering physics simulation execution.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage27.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage27.py::test_generate_battle_report_from_replay PASSED    [ 50%]
+tests/test_stage27.py::test_weakness_heuristics_detection PASSED         [100%]
+
+============================== 2 passed in 0.37s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: PDF or markdown export for battle reports can format multi-match tournament summaries for competitive analytics.
