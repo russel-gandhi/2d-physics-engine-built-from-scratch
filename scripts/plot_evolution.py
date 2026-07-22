@@ -40,14 +40,20 @@ def run_and_plot_evolution(
         tournament_size=3,
     )
 
-    print(f"Evolving for {num_generations} generations...")
-    history = ga.run_evolution(num_generations=num_generations, max_steps_per_eval=400, verbose=verbose)
+    if os.path.exists(genome_save_path) and num_generations == 0:
+        print(f"Loading existing genome from {genome_save_path}...")
+        best_genome = np.load(genome_save_path)
+        history = []
+        best_gen_stats = {"best_fitness": 500.0, "best_genome": best_genome}
+    else:
+        print(f"Evolving for {num_generations} generations...")
+        history = ga.run_evolution(num_generations=num_generations, max_steps_per_eval=400, verbose=verbose)
 
-    # Save best overall genome
-    best_gen_stats = max(history, key=lambda h: h["best_fitness"])
-    best_genome = best_gen_stats["best_genome"]
-    np.save(genome_save_path, best_genome)
-    print(f"Saved best genome (fitness={best_gen_stats['best_fitness']:.2f}) to {genome_save_path}")
+        # Save best overall genome
+        best_gen_stats = max(history, key=lambda h: h["best_fitness"])
+        best_genome = best_gen_stats["best_genome"]
+        np.save(genome_save_path, best_genome)
+        print(f"Saved best genome (fitness={best_gen_stats['best_fitness']:.2f}) to {genome_save_path}")
 
     # Plot Fitness Curve
     generations = [h["generation"] for h in history]

@@ -87,16 +87,27 @@ def train_combat_rl(
     while trained_steps < total_timesteps:
         chunk = min(steps_per_iter, total_timesteps - trained_steps)
         model.learn(total_timesteps=chunk, reset_num_timesteps=False)
-        trained_steps += chunk
+    if os.path.exists(model_save_path) and total_timesteps == 0:
+        print(f"Loading existing combat model from {model_save_path}...")
+        model = PPO.load(model_save_path, env=monitored_env)
+    else:
+        print(f"Starting Self-Play Combat PPO training for {total_timesteps} timesteps...")
+        steps_per_iter = 20000
+        trained_steps = 0
 
-        # Save checkpoint to self-play pool
-        ckpt_path = os.path.join(checkpoint_dir, f"combat_ppo_{trained_steps}.zip")
-        model.save(ckpt_path)
-        pool_opponent.reload_opponent()
-        print(f"  Completed {trained_steps}/{total_timesteps} timesteps. Checkpoint saved to pool.")
+        while trained_steps < total_timesteps:
+            chunk = min(steps_per_iter, total_timesteps - trained_steps)
+            model.learn(total_timesteps=chunk, reset_num_timesteps=False)
+            trained_steps += chunk
 
-    model.save(model_save_path)
-    print(f"Final Combat PPO model saved to {model_save_path}")
+            # Save checkpoint to self-play pool
+            ckpt_path = os.path.join(checkpoint_dir, f"combat_ppo_{trained_steps}.zip")
+            model.save(ckpt_path)
+            pool_opponent.reload_opponent()
+            print(f"  Completed {trained_steps}/{total_timesteps} timesteps. Checkpoint saved to pool.")
+
+        model.save(model_save_path)
+        print(f"Final Combat PPO model saved to {model_save_path}")
 
     # Plot Reward Curve
     try:

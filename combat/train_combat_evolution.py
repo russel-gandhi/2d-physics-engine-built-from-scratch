@@ -99,58 +99,61 @@ def train_combat_evolution(
 
     gen0_best_genome: np.ndarray | None = None
 
-    for gen in range(generations):
-        fitnesses = evaluate_combat_population(population)
-        best_idx = int(np.argmax(fitnesses))
-        best_fit = float(fitnesses[best_idx])
-        mean_fit = float(np.mean(fitnesses))
+    if os.path.exists(model_save_path) and generations == 0:
+        print(f"Loading existing combat GA genome from {model_save_path}...")
+        best_final_genome = np.load(model_save_path)
+    else:
+        for gen in range(generations):
+            fitnesses = evaluate_combat_population(population)
+            best_idx = int(np.argmax(fitnesses))
+            best_fit = float(fitnesses[best_idx])
+            mean_fit = float(np.mean(fitnesses))
 
-        best_fitness_history.append(best_fit)
-        mean_fitness_history.append(mean_fit)
+            best_fitness_history.append(best_fit)
+            mean_fitness_history.append(mean_fit)
 
-        if gen == 0:
-            gen0_best_genome = population.genomes[best_idx].copy()
+            if gen == 0:
+                gen0_best_genome = population.genomes[best_idx].copy()
 
-        print(f"Gen {gen:02d} | Best Combat Fitness: {best_fit:7.2f} | Mean: {mean_fit:7.2f}")
+            print(f"Gen {gen:02d} | Best Combat Fitness: {best_fit:7.2f} | Mean: {mean_fit:7.2f}")
 
-        # Selection, Crossover, Mutation & Elitism
-        new_genomes = []
-        # Elitism: top 2 preserved
-        sorted_indices = np.argsort(fitnesses)[::-1]
-        new_genomes.append(population.genomes[sorted_indices[0]].copy())
-        new_genomes.append(population.genomes[sorted_indices[1]].copy())
+            # Selection, Crossover, Mutation & Elitism
+            new_genomes = []
+            sorted_indices = np.argsort(fitnesses)[::-1]
+            new_genomes.append(population.genomes[sorted_indices[0]].copy())
+            new_genomes.append(population.genomes[sorted_indices[1]].copy())
 
-        while len(new_genomes) < pop_size:
-            parents = tournament_selection(
-                population.genomes, fitnesses, num_select=2, tournament_size=3
-            )
-            child = crossover(parents[0], parents[1])
-            child = mutate(child, mutation_rate=0.05, mutation_strength=0.1)
-            new_genomes.append(child)
+            while len(new_genomes) < pop_size:
+                parents = tournament_selection(
+                    population.genomes, fitnesses, num_select=2, tournament_size=3
+                )
+                child = crossover(parents[0], parents[1])
+                child = mutate(child, mutation_rate=0.05, mutation_strength=0.1)
+                new_genomes.append(child)
 
-        population.genomes = new_genomes
+            population.genomes = new_genomes
 
-    # Final evaluation of best genome
-    final_fitnesses = evaluate_combat_population(population)
-    best_final_idx = int(np.argmax(final_fitnesses))
-    best_final_genome = population.genomes[best_final_idx].copy()
+        # Final evaluation of best genome
+        final_fitnesses = evaluate_combat_population(population)
+        best_final_idx = int(np.argmax(final_fitnesses))
+        best_final_genome = population.genomes[best_final_idx].copy()
 
-    np.save(model_save_path, best_final_genome)
-    print(f"Saved best combat evolved genome to {model_save_path}")
+        np.save(model_save_path, best_final_genome)
+        print(f"Saved best combat evolved genome to {model_save_path}")
 
-    # Plot fitness curve
-    plt.figure(figsize=(9, 5))
-    plt.plot(best_fitness_history, label="Best Combat Fitness", color="green", marker="o")
-    plt.plot(mean_fitness_history, label="Mean Combat Fitness", color="blue", linestyle="--")
-    plt.title("Evolutionary Combat Fitness Across Generations")
-    plt.xlabel("Generation")
-    plt.ylabel("Combat Fitness")
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(plot_path)
-    plt.close()
-    print(f"Evolution combat fitness curve saved to {plot_path}")
+        # Plot fitness curve
+        plt.figure(figsize=(9, 5))
+        plt.plot(best_fitness_history, label="Best Combat Fitness", color="green", marker="o")
+        plt.plot(mean_fitness_history, label="Mean Combat Fitness", color="blue", linestyle="--")
+        plt.title("Evolutionary Combat Fitness Across Generations")
+        plt.xlabel("Generation")
+        plt.ylabel("Combat Fitness")
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(plot_path)
+        plt.close()
+        print(f"Evolution combat fitness curve saved to {plot_path}")
 
     # Head-to-Head Verification: Gen Final Best vs Gen 0 Best
     if gen0_best_genome is not None:
@@ -213,7 +216,8 @@ def train_combat_evolution(
         )
         print(f"Combat GA match GIF saved to {gif_path}")
 
-    return best_final_genome, best_fitness_history[-1]
+    final_score = best_fitness_history[-1] if best_fitness_history else 0.0
+    return best_final_genome, final_score
 
 
 if __name__ == "__main__":

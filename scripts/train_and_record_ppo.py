@@ -51,10 +51,14 @@ def train_and_record_ppo(
         verbose=verbose,
     )
 
-    print(f"Starting PPO training for {total_timesteps} timesteps...")
-    model.learn(total_timesteps=total_timesteps)
-    model.save(model_save_path)
-    print(f"Model saved to {model_save_path}")
+    if os.path.exists(model_save_path) and total_timesteps == 0:
+        print(f"Loading existing model from {model_save_path}...")
+        model = PPO.load(model_save_path, env=monitored_env)
+    else:
+        print(f"Starting PPO training for {total_timesteps} timesteps...")
+        model.learn(total_timesteps=total_timesteps)
+        model.save(model_save_path)
+        print(f"Model saved to {model_save_path}")
 
     # Plot Reward Curve
     try:
