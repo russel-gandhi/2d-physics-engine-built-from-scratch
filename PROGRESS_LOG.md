@@ -286,3 +286,26 @@ tests/test_stage10.py::test_train_and_record_ppo_pipeline PASSED       [100%]
 ======================== 1 passed, 2 warnings in 17.65s =======================
 ```
 - Anything that's a known rough edge / would do differently with more time: Episode mean reward grew from 0.3 to 13.0 over 25k timesteps; extending training to 100k timesteps on multi-core CPU will further refine gait speed.
+
+### Stage 11 — NN Controller & Population — 2026-07-22
+
+- What was built: Hand-rolled Multi-Layer Perceptron neural network controller (`NNController` in `evolution/nn_controller.py`) with ReLU hidden activation and Tanh output activation ($\text{Box}[-1, 1]$ actions), 1D genome vector flattening/unflattening serialization (`get_genome`/`set_genome`), `Population` container (`evolution/population.py`), and simulation evaluation runner.
+- Key design decision (and why): Built weight matrix serialization directly into `NNController` so genetic operators (mutation and crossover) operate on flat float32 numpy arrays without autograd or framework overhead.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage11.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage11.py::test_nn_controller_forward_pass_and_bounds PASSED [ 33%]
+tests/test_stage11.py::test_genome_roundtrip_serialization PASSED        [ 66%]
+tests/test_stage11.py::test_population_evaluation_fitness_variance PASSED [100%]
+
+============================== 3 passed in 1.05s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Controller currently uses a single 16-unit hidden layer; for larger multi-limb creatures, configurable layer sizes can be added as a constructor argument.
