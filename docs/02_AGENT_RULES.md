@@ -9,6 +9,7 @@ These apply to every stage, no exceptions. If a stage file's instructions ever c
 3. **No mocked physics.** Collision, integration, and joint solving must be real — no shortcuts like snapping a body to "look right" instead of resolving the actual collision, no faking a joint by teleporting a body to where it should be.
 4. **No pre-recorded "demo" data presented as live output.** If a video/gif is shown as "the trained agent walking," it must be a recording of an actual run of the actual trained policy — not a hand-scripted animation standing in for it.
 5. **Every stage ships with a way to verify it's real, and that verification is actually run** before the stage is marked done — see "Definition of Done" below.
+6. **No stand-in networking.** Local 1v1 battles (two robots in the same simulation on one machine) are real and in scope. Real networked multiplayer is explicitly out of scope for now (see `05_FUTURE_VISION.md`) — don't build a fake "multiplayer" that's secretly just local play relabeled, and don't build partial networking scaffolding that doesn't actually work end-to-end. If asked to work on multiplayer, stop and check with the user first — it isn't part of the staged plan.
 
 ## Definition of Done (apply this checklist at the end of every stage)
 

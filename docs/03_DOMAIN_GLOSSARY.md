@@ -46,3 +46,15 @@ where `e` is the coefficient of restitution (0 = perfectly inelastic, 1 = perfec
 **Mutation** — randomly perturbing a genome's weights (e.g. add small Gaussian noise to a random subset of weights) to maintain diversity and enable exploration crossover alone can't reach.
 
 **Generation loop** — evaluate fitness for the whole population → select parents → produce the next generation via crossover + mutation → repeat. Track best/average fitness per generation for the progress plot.
+
+## Combat Simulation & Multi-Agent Training
+
+**Self-play** — training an agent by having it compete against itself (or past snapshots of itself) inside the same simulation, rather than against a fixed scripted opponent. Runs entirely locally, no networking required — this is how this project gets "two robots fighting and improving" without needing real multiplayer infrastructure. A common pattern: keep a small pool of past policy checkpoints, sample an opponent from that pool each episode, so the current policy doesn't just overfit to beating one static opponent.
+
+**Impulse-derived damage** — instead of a separate "damage" number chosen by a designer, damage here comes directly from the physics: the impulse magnitude computed during collision resolution (see Physics section above) between two robots' components is used as the basis for damage dealt, with weapon components applying a multiplier. This is what makes combat "physics-driven" rather than animation/script-driven.
+
+**Durability / component breaking** — each robot component tracks a durability value (starts at some maximum, decreases from impulse-derived damage); when it reaches zero the component stops functioning (e.g. a broken limb no longer responds to motor torque, or is treated as detached).
+
+**Round-robin evaluation** — for evolutionary combat fitness, instead of evaluating one genome in isolation, run a small local tournament each generation (e.g. each genome fights a handful of others from the same population) and use win rate / damage dealt as fitness — a standard way to evaluate competitive fitness without needing an external ranking system.
+
+**Replay log** — a recorded sequence of per-step simulation state (positions, angles, damage events) saved during a real match, played back later through the same renderer. A replay is a genuine record of what happened, not a separately-authored animation.

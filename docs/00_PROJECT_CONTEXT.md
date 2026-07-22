@@ -4,43 +4,45 @@
 
 ## What
 
-A 2D physics engine, built from scratch (no Box2D, pymunk, or other physics library — only `numpy` for the math), that simulates rigid bodies, collisions, and articulated joints. On top of that physics core sit two separate "brains":
+**RoboForge Arena** — a robot combat simulation platform built entirely on a custom 2D physics engine. Players design robots from modular components, train combat behavior with reinforcement learning or evolutionary algorithms, then fight locally in a physics-driven arena with no scripted attack animations — combat emerges from physics, robot design, and learned behavior.
 
-- **A) RL Walker** — one articulated creature (a small number of rigid segments connected by motorized joints) trained with PPO (via `stable-baselines3`) to locomote.
-- **B) Evolutionary Sandbox** — a population of creatures controlled by small neural networks, evolved over generations with a genetic algorithm (selection, crossover, mutation) — no gradient-based training involved in this half.
+The current build has two layers on the same physics core:
 
-Both systems run on the **same physics core** and the **same creature representation**, so the finished codebase reads as one coherent simulation platform with two different "brains" plugged into it — not two unrelated demos glued together at the end.
+- **Foundation (Phase 1):** the hand-built physics engine itself — rigid bodies, collision, joints — plus a generic articulated "creature" that can be trained to locomote via RL (PPO) or evolved via a genetic algorithm. This is the substrate everything else stands on.
+- **RoboForge (Phases 2-7):** robots as specialized creatures assembled from components (chassis, armor, limbs, weapons, sensors, energy), combat mechanics (physics-derived damage, no scripted hits), combat-trained fighters (RL self-play + evolutionary tournaments), local 1v1 battles with replay, a sandbox and structured experiment mode, and post-battle analytics reports.
+
+**Not in the current build** (see `05_FUTURE_VISION.md`): real networked multiplayer, matchmaking, ranked ladders, tournaments run across machines, a robot marketplace, community rankings. These require server/networking infrastructure that is a different scale of engineering than everything above combined — that doc explains why they're documented separately instead of staged.
 
 ## Why
 
-- **Primary:** a portfolio/resume project demonstrating both systems-level engineering (writing a physics engine, not importing one) and applied ML (RL + evolutionary computation) in a single project.
-- **Secondary:** the builder wants to genuinely understand every part of the code afterward — able to explain it in an interview — not just end up with a working demo they can't walk through.
-- This is a side project running alongside other hackathon work. It does not need to scale beyond a single machine, a single user, or beyond the 7-day build window.
+- **Primary:** a portfolio/resume project demonstrating physics simulation, applied ML (RL + evolutionary computation), and game-systems design (component-based creature design, combat mechanics, replay systems) in one coherent codebase.
+- **Secondary:** the builder wants to genuinely understand every part of the code — able to explain it in an interview — not just end up with a working demo they can't walk through.
+- The scope grew from a smaller physics+RL sandbox into this fuller vision; the build is being done with AI coding-agent assistance, so the plan favors clear, small, verifiable stages over trying to move fast by skipping verification.
 
 ## Who
 
-- **Builder / primary user:** a first-year Data Science & AI undergraduate, comfortable with ML/hackathon work, newer to physics simulation and lower-level systems code.
-- **Audience for the finished result:** resume readers, interviewers, hackathon/portfolio viewers — people who may ask "walk me through how this works." Clarity of code and of the explanations (physics core, RL vs. GA) matters as much as the demo itself.
-- **The coding agent (you):** working mostly autonomously per stage, likely on a lightweight/free model. This document set exists specifically to give you complete context up front and avoid back-and-forth clarification burning time and tokens.
+- **Builder / primary user:** a first-year Data Science & AI undergraduate, comfortable with ML/hackathon work, newer to physics simulation and lower-level systems/game-architecture code.
+- **Audience for the finished result:** resume readers, interviewers, hackathon/portfolio viewers — people who may ask "walk me through how this works." Clarity of code and of the explanations matters as much as the demo itself.
+- **The coding agent (you):** working mostly autonomously per stage, likely on a lightweight/free model. This document set exists to give you complete context up front and avoid back-and-forth burning time and tokens.
 
 ## When
 
-- Total build window: **7 days**, 2 stages per day (see `04_IMPLEMENTATION_PLAN.md` for the exact table).
-- Order matters and is dependency-driven: physics core → collision → joints → world/rendering → creature format → RL environment → RL training → evolutionary layer → integration/polish. Do not start RL or evolution work before the physics core it depends on is verified working — a bug in the physics core will silently corrupt everything built on top of it.
+- No fixed calendar deadline — the build is paced with AI coding-agent assistance rather than a rigid day count. Phase 1 (stages 01-14) was originally scoped as roughly a week of focused work and is a reasonable pace baseline; Phases 2-7 (stages 15-27) are sized the same way (each stage ≈ half a day to a day of focused, verifiable work) but aren't assigned to specific days.
+- **Order matters and is dependency-driven** — see `04_IMPLEMENTATION_PLAN.md`. Do not start combat mechanics before robots exist, don't start combat RL/GA before combat mechanics are verified, don't start replay/analytics before there's a real match loop producing real data to record.
 
 ## Where
 
-- **Runs locally** on the builder's machine — no deployment, no server, no cloud training. Target is a laptop/desktop CPU; do not assume a GPU is available (PPO on this small a policy network is fine on CPU).
-- **Language/stack:** Python 3.10+. The physics simulation core (integration, collision, joints) is hand-built — no physics engine libraries (Box2D, pymunk, etc.) standing in for it, since building that is the actual point of the project. Beyond that, library choice is open: `numpy` is the natural default for the physics math, `pygame` for rendering, `gymnasium` for the RL environment API, `stable-baselines3` for PPO, `matplotlib` for plots — but swap in `torch`, `scipy`, or anything else where it's a better fit (e.g. the evolutionary NN controller in stage 11 can use numpy or torch). The only real constraint: you understand what every library call is doing well enough to explain it in an interview — don't reach for one as a black box you can't defend.
+- **Runs locally** on the builder's machine — no deployment, no server, no cloud training/hosting. Target is a laptop/desktop CPU; do not assume a GPU is available.
+- **Language/stack:** Python 3.10+. The physics simulation core is hand-built — no physics engine libraries (Box2D, pymunk, etc.) standing in for it. Beyond that, library choice is open (`numpy`/`torch`, `pygame`, `gymnasium`, `stable-baselines3`, `matplotlib`, plus whatever else genuinely fits) — the only constraint is understanding what every library call does well enough to explain it.
 - **Repo layout:** see `01_ARCHITECTURE.md`.
 
-## Non-goals (explicitly out of scope for the 7-day build)
+## Non-goals for the current build
 
 - 3D physics
-- Networked/multiplayer anything
-- A GUI level editor
-- Hand-rolled PPO (using `stable-baselines3` is intentional — the resume value here is building the *environment and physics*, not re-deriving a well-known RL algorithm badly in a week)
-- Photorealistic rendering — `pygame` primitives (lines, polygons, circles) are enough
+- **Real networked multiplayer, matchmaking, ranked servers, tournaments across machines, a robot marketplace, community rankings** — see `05_FUTURE_VISION.md`. "Local 1v1 battle" (two robots in the same simulation on one machine) is in scope and is *not* the same thing as networked multiplayer — don't build a fake/stubbed networking layer to simulate the appearance of this; build the honest local version instead.
+- A full GUI level/robot editor — sandbox and experiment modes (Phase 6) are script/keybinding-driven, not a drag-and-drop UI
+- Hand-rolled PPO (using `stable-baselines3` is intentional — see the domain glossary)
+- Photorealistic rendering — `pygame` primitives are enough
 - Mobile/web builds
 
 If a stage seems to be drifting toward any of the above, stop and flag it rather than continuing.
