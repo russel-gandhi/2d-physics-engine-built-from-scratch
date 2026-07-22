@@ -588,3 +588,27 @@ tests/test_stage19.py::test_arena_timeout_higher_durability_win_condition PASSED
 ============================== 4 passed in 0.33s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: `Arena` supports simultaneous motor actions for both robots; Stage 20 (`CombatEnv`) will wrap `Arena` into standard Gymnasium `Env` interface for multi-agent self-play RL training.
+
+### Stage 20 — Combat Environment — 2026-07-22
+
+- What was built: `CombatEnv` class (`combat/combat_env.py`) wrapping `Arena` into a Gymnasium `Env` interface with continuous action space, relative combat observation space, single-agent training support against scripted opponent policy callbacks, two-agent simultaneous steering (`step_two_agents`), and test suite (`tests/test_stage20.py`).
+- Key design decision (and why): Built both `step(action_a)` (wrapping optional `opponent_policy` callback for SB3 single-agent PPO training) and `step_two_agents(action_a, action_b)` (for self-play and GA tournament evaluation) directly into `CombatEnv`.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage20.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage20.py::test_combat_env_reset_and_observation_shapes PASSED [ 25%]
+tests/test_stage20.py::test_combat_env_single_agent_against_scripted_opponent PASSED [ 50%]
+tests/test_stage20.py::test_combat_env_two_agents_steering PASSED        [ 75%]
+tests/test_stage20.py::test_combat_env_termination_matches_arena PASSED  [100%]
+
+============================== 4 passed in 1.48s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Self-play training (Stage 21) will alternate policy checkpoints as the opponent policy during PPO iterations.
