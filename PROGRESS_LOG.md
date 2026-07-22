@@ -134,7 +134,7 @@ tests/test_stage05.py::test_fixed_timestep_independence PASSED           [ 50%]
 tests/test_stage05.py::test_headless_renderer PASSED                     [ 75%]
 tests/test_stage05.py::test_run_scene_headless_execution PASSED          [100%]
 
-======================== 4 passed, 2 warnings in 1.86s ========================
+======================== 4 passed, 2 warnings in 1.86s =================-------
 ```
 - Anything that's a known rough edge / would do differently with more time: Renderer is pure Pygame primitives; adding anti-aliased surface rendering and customizable camera zoom/pan controls will enhance interactive visual exploration during creature training.
 
@@ -424,3 +424,27 @@ tests/test_stage16.py::test_data_driven_preset_modification PASSED       [100%]
 ============================== 3 passed in 0.30s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Lightweight fighter reaches higher speed under high acceleration; adding active weapon recoil forces in Stage 18 will further test chassis stability.
+
+### Stage 17 — Damage & Durability — 2026-07-22
+
+- What was built: Physics-driven impulse damage module (`combat/damage.py`), `apply_impulse_damage` threshold scaling, `DamageSystem` collision listener, motor component disabling upon segment destruction, and test suite (`tests/test_stage17.py`).
+- Key design decision (and why): Kept the `physics/` engine combat-agnostic by returning normal collision impulse values from `resolve_collision` and processing damage in `combat/damage.py`, preserving pure physics reusability.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage17.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage17.py::test_impulse_below_threshold_causes_no_damage PASSED [ 25%]
+tests/test_stage17.py::test_impulse_above_threshold_proportional_damage PASSED [ 50%]
+tests/test_stage17.py::test_component_destruction_disables_motor PASSED [ 75%]
+tests/test_stage17.py::test_high_velocity_impact_damage_simulation PASSED [100%]
+
+============================== 4 passed in 0.35s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Impulse threshold is set globally; adding material hardness properties (e.g. steel vs alloy) per component will allow variable impulse damage absorption rates.

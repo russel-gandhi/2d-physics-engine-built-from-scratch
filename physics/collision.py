@@ -240,6 +240,8 @@ def find_contacts(bodies: list[RigidBody]) -> list[Contact]:
                 contact = circle_vs_polygon(body_a, body_b)
 
             if contact is not None:
+                contact.body_a = body_a
+                contact.body_b = body_b
                 contacts.append(contact)
 
     return contacts

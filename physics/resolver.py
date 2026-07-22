@@ -12,10 +12,10 @@ def resolve_collision(
     contact: Contact,
     restitution: float = 0.2,
     friction: float = 0.3,
-) -> None:
-    """Resolve collision between body a and body b using impulse response."""
+) -> float:
+    """Resolve collision between body a and body b using impulse response, returning impulse magnitude."""
     if a.is_static and b.is_static:
-        return
+        return 0.0
 
     normal = contact.normal
     p = contact.point
@@ -32,7 +32,7 @@ def resolve_collision(
 
     # Do not resolve if moving apart
     if rel_vel_n > 0:
-        return
+        return 0.0
 
     r_a_cross_n = r_a.cross(normal)
     r_b_cross_n = r_b.cross(normal)
@@ -45,7 +45,7 @@ def resolve_collision(
     )
 
     if denom_n < 1e-12:
-        return
+        return 0.0
 
     j_n = -(1.0 + restitution) * rel_vel_n / denom_n
     impulse_n = normal * j_n
@@ -108,6 +108,8 @@ def resolve_collision(
             a.position = a.position - correction * a.inv_mass
         if not b.is_static:
             b.position = b.position + correction * b.inv_mass
+
+    return abs(j_n)
 
 
 def resolve_contacts(
