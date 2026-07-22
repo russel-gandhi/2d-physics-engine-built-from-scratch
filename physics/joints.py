@@ -114,18 +114,18 @@ class RevoluteJoint(Joint):
 
     def solve(self, dt: float) -> None:
         """Solve 2D point constraint keeping anchor points together."""
-        p_a = self.body_a.position + self.anchor_a.rotate(self.body_a.angle)
-        p_b = self.body_b.position + self.anchor_b.rotate(self.body_b.angle)
-
-        pos_error = p_b - p_a
-        r_a = p_a - self.body_a.position
-        r_b = p_b - self.body_b.position
-
-        v_a = self.body_a.velocity + Vec2(-self.body_a.angular_velocity * r_a.y, self.body_a.angular_velocity * r_a.x)
-        v_b = self.body_b.velocity + Vec2(-self.body_b.angular_velocity * r_b.y, self.body_b.angular_velocity * r_b.x)
-        v_rel = v_b - v_a
-
         for axis in (Vec2(1.0, 0.0), Vec2(0.0, 1.0)):
+            p_a = self.body_a.position + self.anchor_a.rotate(self.body_a.angle)
+            p_b = self.body_b.position + self.anchor_b.rotate(self.body_b.angle)
+            pos_error = p_b - p_a
+
+            r_a = p_a - self.body_a.position
+            r_b = p_b - self.body_b.position
+
+            v_a = self.body_a.velocity + Vec2(-self.body_a.angular_velocity * r_a.y, self.body_a.angular_velocity * r_a.x)
+            v_b = self.body_b.velocity + Vec2(-self.body_b.angular_velocity * r_b.y, self.body_b.angular_velocity * r_b.x)
+            v_rel = v_b - v_a
+
             rel_v = v_rel.dot(axis)
             err = pos_error.dot(axis)
 
@@ -140,7 +140,7 @@ class RevoluteJoint(Joint):
             )
 
             if denom > 1e-12:
-                bias = (0.2 / dt) * err
+                bias = (0.5 / dt) * err
                 j = -(rel_v + bias) / denom
                 impulse = axis * j
 
@@ -152,7 +152,14 @@ class RevoluteJoint(Joint):
                     self.body_b.velocity = self.body_b.velocity + impulse * self.body_b.inv_mass
                     self.body_b.angular_velocity += r_b.cross(impulse) * self.body_b.inv_moment_of_inertia
 
-                # Update relative velocity for second axis
-                v_a = self.body_a.velocity + Vec2(-self.body_a.angular_velocity * r_a.y, self.body_a.angular_velocity * r_a.x)
-                v_b = self.body_b.velocity + Vec2(-self.body_b.angular_velocity * r_b.y, self.body_b.angular_velocity * r_b.x)
-                v_rel = v_b - v_a
+        # Positional correction to eliminate drift
+        p_a = self.body_a.position + self.anchor_a.rotate(self.body_a.angle)
+        p_b = self.body_b.position + self.anchor_b.rotate(self.body_b.angle)
+        pos_err = p_b - p_a
+        inv_mass_sum = self.body_a.inv_mass + self.body_b.inv_mass
+        if inv_mass_sum > 1e-12:
+            corr = pos_err * 0.05
+            if not self.body_a.is_static:
+                self.body_a.position += corr * (self.body_a.inv_mass / inv_mass_sum)
+            if not self.body_b.is_static:
+                self.body_b.position -= corr * (self.body_b.inv_mass / inv_mass_sum)

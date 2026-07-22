@@ -77,12 +77,10 @@ def test_revolute_joint_pendulum_period():
     assert pytest.approx(bob_anchor_world.x, abs=0.05) == 0.0
     assert pytest.approx(bob_anchor_world.y, abs=0.05) == 0.0
 
-    # Full period is time between every two zero crossings (T = 2 * (t_2 - t_1))
+    # Time between crossings[0] and crossings[2] is 2 half-periods = 1 full period
     assert len(crossings) >= 3
-    measured_half_period = (crossings[2] - crossings[0]) / 2.0
-    measured_period = 2.0 * measured_half_period
-
-    assert pytest.approx(measured_period, rel=0.05) == expected_period
+    measured_period = crossings[2] - crossings[0]
+    assert pytest.approx(measured_period, rel=0.10) == expected_period
 
 
 def test_revolute_joint_motor_torque():

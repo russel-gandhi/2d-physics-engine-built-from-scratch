@@ -137,3 +137,26 @@ tests/test_stage05.py::test_run_scene_headless_execution PASSED          [100%]
 ======================== 4 passed, 2 warnings in 1.86s ========================
 ```
 - Anything that's a known rough edge / would do differently with more time: Renderer is pure Pygame primitives; adding anti-aliased surface rendering and customizable camera zoom/pan controls will enhance interactive visual exploration during creature training.
+
+### Stage 06 — Creature Morphology Format & Manual Scene Test — 2026-07-22
+
+- What was built: Data-driven morphology spec loader (`CreatureSpec`, `SegmentSpec`, `JointSpec` in `creatures/morphology.py`), `build_creature` builder, `Creature` instance interface with normalized `apply_actions` motor torque mapping, and preset `creatures/presets/hopper.json` (2-segment single-revolute-joint walker).
+- Key design decision (and why): Defined a data-driven JSON format for creature morphologies so both the Gymnasium RL environment (Stage 07) and the Evolutionary population (Stage 11) share identical creature creation logic without duplicating code.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage06.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage06.py::test_build_creature_from_hopper_preset PASSED     [ 33%]
+tests/test_stage06.py::test_creature_action_application_and_simulation PASSED [ 66%]
+tests/test_stage06.py::test_data_driven_preset_modification PASSED       [100%]
+
+============================== 3 passed in 0.28s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Joint angle limits (min/max angle stops) can be added to JointSpec as an extension when creating multi-limb creatures with anatomical constraints.

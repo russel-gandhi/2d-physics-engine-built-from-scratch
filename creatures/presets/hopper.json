@@ -1,0 +1,44 @@
+{
+  "name": "Hopper",
+  "segments": [
+    {
+      "name": "torso",
+      "shape_type": "polygon",
+      "vertices": [
+        [-0.5, -0.2],
+        [0.5, -0.2],
+        [0.5, 0.2],
+        [-0.5, 0.2]
+      ],
+      "mass": 2.0,
+      "moment_of_inertia": 0.2,
+      "relative_position": [0.0, 1.5],
+      "relative_angle": 0.0
+    },
+    {
+      "name": "leg",
+      "shape_type": "polygon",
+      "vertices": [
+        [-0.1, -0.5],
+        [0.1, -0.5],
+        [0.1, 0.5],
+        [-0.1, 0.5]
+      ],
+      "mass": 0.8,
+      "moment_of_inertia": 0.05,
+      "relative_position": [0.0, 0.8],
+      "relative_angle": 0.0
+    }
+  ],
+  "joints": [
+    {
+      "name": "hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "leg",
+      "anchor_parent": [0.0, -0.2],
+      "anchor_child": [0.0, 0.5],
+      "max_torque": 30.0
+    }
+  ]
+}
