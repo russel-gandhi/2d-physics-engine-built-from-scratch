@@ -338,3 +338,32 @@ tests/test_stage12.py::test_ga_evolution_and_plot_generation PASSED      [100%]
 ============================== 2 passed in 15.22s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Evaluating 20 individuals over 20 generations takes ~25s sequentially; multiprocessing pool evaluation can accelerate multi-population evolution.
+
+### Stage 13 — Integration & Demo Capture — 2026-07-22
+
+- What was built: Standalone PPO policy demo runner (`scripts/demo_walker.py`), standalone GA evolved controller demo runner (`scripts/demo_evolution.py`), side-by-side comparison benchmark runner (`scripts/demo_comparison.py`), comparison plot (`scripts/rl_vs_ga_comparison.png`), and verification suite (`tests/test_stage13.py`).
+- Key design decision (and why): Designed `demo_walker.py` and `demo_evolution.py` to raise explicit `FileNotFoundError` exceptions if checkpoint files are missing rather than falling back to un-trained or dummy actions.
+- Verification run (paste the actual command + result, not a description):
+```
+python -m scripts.demo_comparison
+--- RL vs GA Locomotion Benchmark ---
+PPO (RL)   Mean Return: 142.49 | Mean Steps: 500.0
+GA (Evol)  Mean Return: 514.50 | Mean Steps: 500.0
+
+pytest tests/test_stage13.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage13.py::test_demo_walker_execution PASSED                 [ 25%]
+tests/test_stage13.py::test_demo_evolution_execution PASSED              [ 50%]
+tests/test_stage13.py::test_demo_missing_artifacts_raise_error PASSED    [ 75%]
+tests/test_stage13.py::test_demo_comparison_execution PASSED             [100%]
+
+============================== 4 passed in 29.80s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: PPO policy and GA controller both achieved 500 max steps without falling; future multi-terrain challenges can test policy robustness under obstacle variations.
