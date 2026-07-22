@@ -700,3 +700,26 @@ tests/test_stage24.py::test_spectator_overlay_health_bars_proportional_rendering
 ============================== 2 passed in 1.55s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Adding team color customization per robot spec will enhance multi-agent visual differentiation.
+
+### Stage 25 — Sandbox Mode — 2026-07-22
+
+- What was built: `SandboxMode` interactive laboratory (`sandbox/sandbox_mode.py`) supporting dynamic shape spawning (`S`), robot preset spawning (`R`), live gravity mutation (`G`), terrain resetting (`T`), pause/resume (`Space`), and test suite (`tests/test_stage25.py`).
+- Key design decision (and why): Mutated `world.gravity` live in `World.step` so gravity changes immediately alter acceleration vectors for all active rigid bodies without rebuilding the scene.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage25.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage25.py::test_sandbox_mode_gravity_and_terrain_toggling PASSED [ 33%]
+tests/test_stage25.py::test_sandbox_mode_spawning_shapes_and_robots PASSED [ 66%]
+tests/test_stage25.py::test_sandbox_mode_world_reset PASSED              [100%]
+
+============================== 3 passed in 0.62s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Mouse cursor click-to-spawn drag-and-drop can be added to the Pygame event loop for precise spatial positioning.
