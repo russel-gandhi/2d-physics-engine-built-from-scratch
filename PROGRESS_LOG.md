@@ -656,3 +656,25 @@ tests/test_stage22.py::test_combat_evolution_pipeline_and_artifacts PASSED [100%
 ============================== 2 passed in 10.15s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Pairwise evaluation across population size $N$ runs $N \times K$ matches per generation; multiprocessing pool evaluation can scale evolutionary combat training to 50+ individual populations.
+
+### Stage 23 — Replay System — 2026-07-22
+
+- What was built: `MatchRecorder` serialization engine (`replay/recorder.py`), JSON trajectory exporter, `ReplayPlayer` renderer (`replay/player.py`) supporting frame scrubbing, pause/resume, and variable speed slow-motion playback (0.5x, 1.0x, 2.0x), and test suite (`tests/test_stage23.py`).
+- Key design decision (and why): Recorded exact body transformation coordinates and segment health pools per timestep into structured JSON files so playback is 100% deterministic and independent of physics re-simulation.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage23.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage23.py::test_match_recorder_saves_and_loads_replay PASSED [ 50%]
+tests/test_stage23.py::test_replay_player_reconstructs_and_renders PASSED [100%]
+
+============================== 2 passed in 0.87s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Frame interpolation can smooth playback visual quality when playing back at 0.25x slow motion.
