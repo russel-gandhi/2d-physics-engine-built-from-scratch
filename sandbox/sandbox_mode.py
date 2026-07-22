@@ -27,7 +27,7 @@ class SandboxMode:
         self.paused = False
         self.renderer: Renderer | None = None
         if not self.headless:
-            self.renderer = Renderer(width=800, height=400, caption="RoboForge Arena — Sandbox Mode")
+            self.renderer = Renderer(width=800, height=600, caption="RoboForge Arena — Sandbox Mode")
 
         self.world: World = World(gravity=self.gravity_modes[0])
         self.setup_terrain()

@@ -18,7 +18,7 @@ class Renderer:
         width: int = 800,
         height: int = 600,
         scale: float = 50.0,
-        camera_offset: Vec2 | tuple = (400, 500),
+        camera_offset: Vec2 | tuple | None = None,
         caption: str = "RoboForge Arena — Physics Simulation",
         headless: bool = False,
     ) -> None:
@@ -26,7 +26,10 @@ class Renderer:
         self.width = width
         self.height = height
         self.scale = scale
-        self.camera_offset = Vec2(camera_offset)
+        if camera_offset is None:
+            self.camera_offset = Vec2(width / 2.0, height - 100.0)
+        else:
+            self.camera_offset = Vec2(camera_offset)
         self.caption = caption
         self.headless = headless
 
