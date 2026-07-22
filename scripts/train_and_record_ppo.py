@@ -101,9 +101,8 @@ def train_and_record_ppo(
         done = terminated or truncated
 
         # Render frame offscreen
-        renderer.clear()
-        renderer.draw_world(eval_env.world)
-        frame_surface = renderer.get_surface()
+        renderer.render(eval_env.world)
+        frame_surface = renderer.screen
 
         # Convert Pygame surface to PIL Image
         rgb_bytes = pygame.image.tostring(frame_surface, "RGB")
