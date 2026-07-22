@@ -184,3 +184,32 @@ tests/test_stage07.py::test_termination_on_fall PASSED                   [100%]
 ============================== 4 passed in 1.69s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Standard Gymnasium `env.render()` visual mode can be added as a pass-through to Stage 05's `Renderer` for live episode playback during RL evaluation.
+
+### Stage 08 — Environment Sanity Check — 2026-07-22
+
+- What was built: Environment sanity audit runner (`scripts/sanity_check_env.py`) validating reward distributions, observation bounds (zero NaNs/Infs), episode termination reaching, zero-action baseline comparison, and automated Matplotlib reward distribution plotting (`scripts/sanity_check_rewards.png`).
+- Key design decision (and why): Compared random-policy rollouts against a zero-action baseline to ensure non-trivial dynamic signal in rewards and observations before launching policy gradient optimization.
+- Verification run (paste the actual command + result, not a description):
+```
+python -m scripts.sanity_check_env
+Sanity Check Completed across 50 Random Episodes:
+  Mean Return: -1.11 ± 6.93
+  Mean Length: 23.0 steps
+  Terminated Episodes (Fell): 50/50
+  Zero-Action Mean Return: 22.57
+  NaN/Inf Found: False
+
+pytest tests/test_stage08.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_stage08.py::test_environment_sanity_check_execution PASSED    [100%]
+
+======================== 1 passed, 2 warnings in 5.92s ========================
+```
+- Anything that's a known rough edge / would do differently with more time: Zero action policy lets creature stand still / fall gradually (giving positive survival reward), whereas random flailing causes fast tipping (triggering early termination), confirming that locomotion reward shaping in Stage 10 will have a clear learning signal to reward forward progress over falling.
