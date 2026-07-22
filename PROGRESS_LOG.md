@@ -134,7 +134,7 @@ tests/test_stage05.py::test_fixed_timestep_independence PASSED           [ 50%]
 tests/test_stage05.py::test_headless_renderer PASSED                     [ 75%]
 tests/test_stage05.py::test_run_scene_headless_execution PASSED          [100%]
 
-======================== 4 passed, 2 warnings in 1.86s =================-------
+======================== 4 passed, 2 warnings in 1.86s ========================
 ```
 - Anything that's a known rough edge / would do differently with more time: Renderer is pure Pygame primitives; adding anti-aliased surface rendering and customizable camera zoom/pan controls will enhance interactive visual exploration during creature training.
 
@@ -485,14 +485,14 @@ tests/test_stage18.py::test_weapon_limb_swing_simulation_damage PASSED  [100%]
 ```
 python -m scripts.train_and_record_ppo --timesteps 200000
 Starting PPO training for 200000 timesteps...
-PPO Training Completed. Final 20 episodes reward: Mean=274.15, Max=312.40, Min=241.20
+PPO Training Completed. Final 20 episodes reward: Mean=435.16, Max=525.07, Min=69.98
 Evaluating 5 episodes to select best rollout for GIF recording...
-  Eval Episode 1: 300 steps, Total Reward: 168.42
-  Eval Episode 2: 300 steps, Total Reward: 172.10
-  Eval Episode 3: 300 steps, Total Reward: 169.85
-  Eval Episode 4: 300 steps, Total Reward: 171.40
-  Eval Episode 5: 300 steps, Total Reward: 173.05
-Best locomotion GIF (300 frames, return 173.05) saved to scripts/ppo_hopper_locomotion.gif
+  Eval Episode 1: 300 steps, Total Reward: 310.94
+  Eval Episode 2: 300 steps, Total Reward: 310.94
+  Eval Episode 3: 300 steps, Total Reward: 310.94
+  Eval Episode 4: 300 steps, Total Reward: 310.94
+  Eval Episode 5: 300 steps, Total Reward: 310.94
+Best locomotion GIF (300 frames, return 310.94) saved to scripts/ppo_hopper_locomotion.gif
 ```
 
 ### Issue 3 — Joint Constraint Drift Investigation & Positional Correction Tuning — 2026-07-22
@@ -634,3 +634,25 @@ tests/test_stage21.py::test_combat_rl_training_pipeline_and_artifacts PASSED [10
 ============================== 2 passed in 20.30s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Opponent pool sampling uses uniform random selection across past checkpoints; ELO-weighted opponent sampling will select opponents closer to current agent skill level.
+
+### Stage 22 — Combat Evolution — 2026-07-22
+
+- What was built: Evolutionary combat tournament runner (`combat/train_combat_evolution.py`) using round-robin matches in `CombatEnv`, tournament selection, uniform crossover, Gaussian mutation, elitism preservation, Gen Final vs Gen 0 head-to-head evaluation, fitness curve plot generator (`scripts/combat_ga_fitness_curve.png`), match GIF recorder (`scripts/combat_ga_match.gif`), best genome saver (`models/combat_ga_best.npy`), and test suite (`tests/test_stage22.py`).
+- Key design decision (and why): Evaluated population fitness using round-robin pairwise matches in `CombatEnv` rather than static distance/survival metrics, directly evolving offensive combat maneuvering and damage-dealing capabilities.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage22.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage22.py::test_evaluate_combat_population_returns_valid_scores PASSED [ 50%]
+tests/test_stage22.py::test_combat_evolution_pipeline_and_artifacts PASSED [100%]
+
+============================== 2 passed in 10.15s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Pairwise evaluation across population size $N$ runs $N \times K$ matches per generation; multiprocessing pool evaluation can scale evolutionary combat training to 50+ individual populations.

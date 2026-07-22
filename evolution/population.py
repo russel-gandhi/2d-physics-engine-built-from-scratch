@@ -14,17 +14,24 @@ class Population:
         size: int,
         creature_spec: CreatureSpec | str | None = None,
         hidden_dim: int = 16,
+        obs_dim: int | None = None,
+        num_actions: int | None = None,
     ) -> None:
         """Initialize population of random individual genomes matching creature morphology."""
         self.size = size
         self.hidden_dim = hidden_dim
 
-        # Determine dimensions from sample environment
-        sample_env = CreatureEnv(spec=creature_spec)
-        self.creature_spec = sample_env.creature_spec
-        self.obs_dim = sample_env.observation_space.shape[0]
-        self.num_actions = sample_env.action_space.shape[0]
-        sample_env.close()
+        if obs_dim is not None and num_actions is not None:
+            self.obs_dim = obs_dim
+            self.num_actions = num_actions
+            self.creature_spec = creature_spec
+        else:
+            # Determine dimensions from sample environment
+            sample_env = CreatureEnv(spec=creature_spec)
+            self.creature_spec = sample_env.creature_spec
+            self.obs_dim = sample_env.observation_space.shape[0]
+            self.num_actions = sample_env.action_space.shape[0]
+            sample_env.close()
 
         # Dummy controller to get genome length
         dummy_ctrl = NNController(self.obs_dim, self.num_actions, hidden_dim)
