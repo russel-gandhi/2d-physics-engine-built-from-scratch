@@ -65,3 +65,27 @@ tests/test_stage02.py::test_broad_phase_filtering PASSED                 [100%]
 ============================== 5 passed in 0.17s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Polygon contact point estimation currently uses body center midpoint for poly-poly, which will be refined with contact manifold generation in collision resolution if multiple contact points are needed for complex stacks.
+
+### Stage 03 — Collision Resolution — 2026-07-22
+
+- What was built: Impulse-based collision solver (`physics/resolver.py`) handling normal restitution impulse, Coulomb friction tangent impulse, angular momentum transfer, and Baumgarte-style positional penetration correction.
+- Key design decision (and why): Included rotational inertia cross products in the denominator of normal and tangent impulse calculations so off-center impacts correctly generate body rotation and spin.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage03.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage03.py::test_elastic_bounce_height PASSED                 [ 25%]
+tests/test_stage03.py::test_inelastic_collision PASSED                   [ 50%]
+tests/test_stage03.py::test_momentum_conservation_elastic PASSED         [ 75%]
+tests/test_stage03.py::test_ball_drop_settle_simulation PASSED           [100%]
+
+============================== 4 passed in 0.66s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Positional correction uses simple 40% penetration push-apart per frame with a 0.01 slop threshold; for dense multi-body stacks, iterative constraint relaxation across multiple sub-steps gives even tighter stacking stability.
