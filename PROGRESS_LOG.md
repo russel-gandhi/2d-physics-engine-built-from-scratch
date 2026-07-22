@@ -367,3 +367,14 @@ tests/test_stage13.py::test_demo_comparison_execution PASSED             [100%]
 ============================== 4 passed in 29.80s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: PPO policy and GA controller both achieved 500 max steps without falling; future multi-terrain challenges can test policy robustness under obstacle variations.
+
+### Stage 14 — Final Verification & Polish — 2026-07-22
+
+- What was built: Codebase anti-hardcoding audit suite (`tests/test_stage14.py`), human-readable top-level project documentation (`README.md`) featuring embedded GIF animations, benchmark tables, quickstart commands, and Mermaid system architecture diagram.
+- Key design decision (and why): Structured `README.md` for external portfolio presentation highlighting zero third-party physics engine dependencies and clear side-by-side performance comparisons.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/ -v
+================ 46 passed, 2 warnings in 138.00s (0:02:18) ==================
+```
+- Anything that's a known rough edge / would do differently with more time: Phase 4 (Evolutionary Computation) and Phase 1-3 baseline physics/RL components are 100% completed and verified; Phase 5 (Robot Combat Extensions) is ready for implementation.
