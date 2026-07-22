@@ -678,3 +678,25 @@ tests/test_stage23.py::test_replay_player_reconstructs_and_renders PASSED [100%]
 ============================== 2 passed in 0.87s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Frame interpolation can smooth playback visual quality when playing back at 0.25x slow motion.
+
+### Stage 24 — Spectator Visualization Polish — 2026-07-22
+
+- What was built: `SpectatorOverlay` rendering HUD (`render/spectator.py`) with live health bars, remaining HP counters, animated hit flash markers on damage events, and test suite (`tests/test_stage24.py`).
+- Key design decision (and why): Integrated spectator HUD drawing directly onto the Pygame renderer frame buffer, rendering clean health bars and animated hit markers on collision points above threshold without modifying physics integration logic.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage24.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage24.py::test_spectator_overlay_initialization_and_flashes PASSED [ 50%]
+tests/test_stage24.py::test_spectator_overlay_health_bars_proportional_rendering PASSED [100%]
+
+============================== 2 passed in 1.55s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Adding team color customization per robot spec will enhance multi-agent visual differentiation.
