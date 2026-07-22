@@ -160,3 +160,27 @@ tests/test_stage06.py::test_data_driven_preset_modification PASSED       [100%]
 ============================== 3 passed in 0.28s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Joint angle limits (min/max angle stops) can be added to JointSpec as an extension when creating multi-limb creatures with anatomical constraints.
+
+### Stage 07 — Gymnasium Environment Wrapper — 2026-07-22
+
+- What was built: `CreatureEnv` class (`rl/env.py`) wrapping standard Gymnasium `Env` interface with continuous Box action space (`[-1.0, 1.0]` normalized torques), Box observation space (torso pose/velocity + relative joint angles/velocities + foot contact flags), frame-skipping, dynamic forward velocity reward, fall termination logic, and max episode step truncation.
+- Key design decision (and why): Wrapped physics world stepping into frame_skip (4 physics steps per RL step) to lower the RL decision frequency relative to physics integration frequency, improving policy stability and learning efficiency.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage07.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/test_stage07.py::test_environment_reset_and_observation_shape PASSED [ 25%]
+tests/test_stage07.py::test_random_action_multi_episode_loop PASSED      [ 50%]
+tests/test_stage07.py::test_dynamic_reward_computation PASSED            [ 75%]
+tests/test_stage07.py::test_termination_on_fall PASSED                   [100%]
+
+============================== 4 passed in 1.69s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Standard Gymnasium `env.render()` visual mode can be added as a pass-through to Stage 05's `Renderer` for live episode playback during RL evaluation.
