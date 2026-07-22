@@ -1,0 +1,13 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Training artifacts (bulky, regenerable — keep only the final checkpoint/demo clips you want to showcase)
+tensorboard_logs/
+checkpoints/*
+!checkpoints/.gitkeep
+
+# OS
+.DS_Store

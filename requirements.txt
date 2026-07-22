@@ -1,0 +1,9 @@
+# Core dependencies for the base plan — add others (torch, scipy, etc.) as needed.
+# The stack isn't restricted to this list; just keep this file updated so
+# `pip install -r requirements.txt` always reproduces a working environment.
+numpy
+pygame
+gymnasium
+stable-baselines3
+matplotlib
+pytest
