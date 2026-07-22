@@ -20,13 +20,14 @@ from render.renderer import Renderer
 
 
 def train_and_record_ppo(
-    total_timesteps: int = 50000,
+    total_timesteps: int = 200000,
     model_save_path: str = "models/ppo_hopper_trained.zip",
     plot_path: str = "scripts/ppo_reward_curve.png",
     gif_path: str = "scripts/ppo_hopper_locomotion.gif",
+    num_eval_episodes: int = 5,
     verbose: int = 1,
 ) -> PPO:
-    """Train PPO policy, plot reward curve, and record GIF of policy execution."""
+    """Train PPO policy, plot reward curve, and record GIF of best evaluation episode."""
     log_dir = "logs/ppo_monitor"
     os.makedirs(log_dir, exist_ok=True)
     os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
@@ -60,11 +61,10 @@ def train_and_record_ppo(
         x, y = ts2xy(load_results(log_dir), "timesteps")
         if len(x) > 0:
             plt.figure(figsize=(9, 5))
-            plt.plot(x, y, label="Episode Reward", color="blue", alpha=0.5)
+            plt.plot(x, y, label="Episode Reward", color="blue", alpha=0.3)
 
-            # Smooth curve if enough data points
             if len(y) >= 10:
-                window_size = min(10, len(y))
+                window_size = min(20, len(y))
                 y_smooth = np.convolve(y, np.ones(window_size) / window_size, mode="valid")
                 x_smooth = x[window_size - 1:]
                 plt.plot(x_smooth, y_smooth, label="Smoothed Reward (Moving Avg)", color="red", linewidth=2)
@@ -78,56 +78,73 @@ def train_and_record_ppo(
             plt.savefig(plot_path)
             plt.close()
             print(f"Reward curve plot saved to {plot_path}")
+
+            # Report final reward statistics
+            final_returns = y[-20:] if len(y) >= 20 else y
+            print(f"PPO Training Completed. Final 20 episodes reward: Mean={np.mean(final_returns):.2f}, Max={np.max(final_returns):.2f}, Min={np.min(final_returns):.2f}")
     except Exception as e:
         print(f"Warning: Could not plot reward curve: {e}")
 
-    # Record GIF of Trained Policy
-    print("Recording locomotion GIF animation...")
-    eval_env = CreatureEnv(max_episode_steps=300)
-    obs, info = eval_env.reset()
-    assert eval_env.world is not None
+    # Evaluate multiple episodes and record the best performing one
+    print(f"Evaluating {num_eval_episodes} episodes to select best rollout for GIF recording...")
+    best_frames = []
+    best_reward = -float("inf")
+    best_steps = 0
 
-    renderer = Renderer(width=800, height=400, headless=True)
-    frames = []
+    max_record_steps = 300  # Up to 5 seconds @ 60 FPS
 
-    done = False
-    step_count = 0
-    max_record_steps = 180  # 3 seconds @ 60 FPS
+    for ep in range(num_eval_episodes):
+        eval_env = CreatureEnv(max_episode_steps=max_record_steps)
+        obs, _ = eval_env.reset()
+        assert eval_env.world is not None
 
-    while not done and step_count < max_record_steps:
-        action, _ = model.predict(obs, deterministic=True)
-        obs, reward, terminated, truncated, info = eval_env.step(action)
-        step_count += 1
-        done = terminated or truncated
+        renderer = Renderer(width=800, height=400, headless=True)
+        ep_frames = []
+        ep_reward = 0.0
+        step_count = 0
+        done = False
 
-        # Render frame offscreen
-        renderer.render(eval_env.world)
-        frame_surface = renderer.screen
+        while not done and step_count < max_record_steps:
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, terminated, truncated, _ = eval_env.step(action)
+            ep_reward += reward
+            step_count += 1
+            done = terminated or truncated
 
-        # Convert Pygame surface to PIL Image
-        rgb_bytes = pygame.image.tostring(frame_surface, "RGB")
-        frame_img = Image.frombytes("RGB", (800, 400), rgb_bytes)
-        frames.append(frame_img)
+            renderer.render(eval_env.world)
+            rgb_bytes = pygame.image.tostring(renderer.screen, "RGB")
+            frame_img = Image.frombytes("RGB", (800, 400), rgb_bytes)
+            ep_frames.append(frame_img)
 
-    renderer.close()
-    eval_env.close()
+        renderer.close()
+        eval_env.close()
 
-    if frames:
-        frames[0].save(
+        print(f"  Eval Episode {ep+1}: {step_count} steps, Total Reward: {ep_reward:.2f}")
+        if ep_reward > best_reward:
+            best_reward = ep_reward
+            best_steps = step_count
+            best_frames = ep_frames
+
+    # Check for short episode threshold warning
+    if best_steps < 60:
+        print(f"WARNING: Best evaluation episode lasted only {best_steps} steps (< 60 frames threshold). Policy may be falling early!")
+
+    if best_frames:
+        best_frames[0].save(
             gif_path,
             save_all=True,
-            append_images=frames[1:],
+            append_images=best_frames[1:],
             duration=33,  # ~30 fps gif speed
             loop=0,
         )
-        print(f"Locomotion GIF saved to {gif_path}")
+        print(f"Best locomotion GIF ({best_steps} frames, return {best_reward:.2f}) saved to {gif_path}")
 
     return model
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO Hopper and record locomotion GIF")
-    parser.add_argument("--timesteps", type=int, default=30000, help="Timesteps to train")
+    parser.add_argument("--timesteps", type=int, default=200000, help="Timesteps to train")
     args = parser.parse_args()
 
     train_and_record_ppo(total_timesteps=args.timesteps)

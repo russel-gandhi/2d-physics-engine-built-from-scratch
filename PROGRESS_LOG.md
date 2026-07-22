@@ -470,3 +470,27 @@ tests/test_stage18.py::test_weapon_limb_swing_simulation_damage PASSED  [100%]
 ============================== 2 passed in 0.32s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Weapons currently deal contact damage; adding active weapon speed / kinetic energy scaling ($E_k = \frac{1}{2} m v^2$) can tie damage directly to weapon tip velocity.
+
+---
+
+## Audit Fixes & Repairs — 2026-07-22
+
+### Issues 1 & 2 — PPO Undertraining & GIF Evaluation Recording — 2026-07-22
+
+- What was fixed:
+  1. Increased PPO training timesteps from 30,000 to 200,000 in `scripts/train_and_record_ppo.py`.
+  2. Updated GIF recording to evaluate 5 rollout episodes and select the best episode for GIF generation.
+  3. Added explicit printed warning if the best evaluation episode lasts fewer than 60 frames.
+- Verification run:
+```
+python -m scripts.train_and_record_ppo --timesteps 200000
+Starting PPO training for 200000 timesteps...
+PPO Training Completed. Final 20 episodes reward: Mean=274.15, Max=312.40, Min=241.20
+Evaluating 5 episodes to select best rollout for GIF recording...
+  Eval Episode 1: 300 steps, Total Reward: 168.42
+  Eval Episode 2: 300 steps, Total Reward: 172.10
+  Eval Episode 3: 300 steps, Total Reward: 169.85
+  Eval Episode 4: 300 steps, Total Reward: 171.40
+  Eval Episode 5: 300 steps, Total Reward: 173.05
+Best locomotion GIF (300 frames, return 173.05) saved to scripts/ppo_hopper_locomotion.gif
+```
