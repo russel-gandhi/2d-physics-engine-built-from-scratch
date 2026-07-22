@@ -309,3 +309,32 @@ tests/test_stage11.py::test_population_evaluation_fitness_variance PASSED [100%]
 ============================== 3 passed in 1.05s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: Controller currently uses a single 16-unit hidden layer; for larger multi-limb creatures, configurable layer sizes can be added as a constructor argument.
+
+### Stage 12 — Genetic Algorithm Loop — 2026-07-22
+
+- What was built: Genetic Algorithm engine (`evolution/ga.py`) featuring tournament selection, uniform crossover, Gaussian mutation, and elitism preservation; evolution training and animation runner (`scripts/plot_evolution.py`); evolution fitness curve plot generator (`scripts/ga_fitness_curve.png`); best evolved genome model (`models/ga_hopper_best.npy`); locomotion animation GIF (`scripts/ga_hopper_locomotion.gif`); test suite (`tests/test_stage12.py`).
+- Key design decision (and why): Carried over 2 elite genomes per generation unchanged to ensure monotonic non-decreasing best fitness across generations while exploring mutated child solutions.
+- Verification run (paste the actual command + result, not a description):
+```
+python -m scripts.plot_evolution --generations 20 --pop-size 20
+Generation 00 | Best Fitness:   8.80 | Mean Fitness:   1.94
+Generation 19 | Best Fitness: 406.76 | Mean Fitness: 105.68
+Saved best genome (fitness=406.76) to models/ga_hopper_best.npy
+Evolution fitness plot saved to scripts/ga_fitness_curve.png
+GA Locomotion GIF saved to scripts/ga_hopper_locomotion.gif
+
+pytest tests/test_stage12.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage12.py::test_ga_operators_behavior PASSED                 [ 50%]
+tests/test_stage12.py::test_ga_evolution_and_plot_generation PASSED      [100%]
+
+============================== 2 passed in 15.22s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Evaluating 20 individuals over 20 generations takes ~25s sequentially; multiprocessing pool evaluation can accelerate multi-population evolution.
