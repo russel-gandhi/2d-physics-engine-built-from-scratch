@@ -378,3 +378,26 @@ pytest tests/ -v
 ================ 46 passed, 2 warnings in 138.00s (0:02:18) ==================
 ```
 - Anything that's a known rough edge / would do differently with more time: Phase 4 (Evolutionary Computation) and Phase 1-3 baseline physics/RL components are 100% completed and verified; Phase 5 (Robot Combat Extensions) is ready for implementation.
+
+### Stage 15 — Robot Component System — 2026-07-22
+
+- What was built: Robot component property model (`ComponentSpec`, `ComponentType` in `robots/components.py`), `RobotSpec` extending `CreatureSpec` with modular physical component attachments (`robots/robot_spec.py`), `Robot` runtime instance tracking segment health pools and energy reserves, `build_robot` factory, and verification suite (`tests/test_stage15.py`).
+- Key design decision (and why): Integrated component masses directly into segment mass specifications during `build_robot` execution so physical inertia, gravitational acceleration, and collision momentum automatically incorporate component mass tradeoffs.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage15.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage15.py::test_robot_component_summation_properties PASSED  [ 33%]
+tests/test_stage15.py::test_armor_component_increases_mass_and_alters_dynamics PASSED [ 66%]
+tests/test_stage15.py::test_robot_durability_and_energy_tracking PASSED  [100%]
+
+============================== 3 passed in 0.32s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: `Robot` segment health is currently tracked per segment; adding localized armor plating sub-zones will allow direction-dependent impact damage reduction.
