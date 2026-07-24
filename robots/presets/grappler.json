@@ -1,0 +1,152 @@
+{
+  "name": "Grappler-gen34",
+  "display_name": "Grappler-gen34",
+  "description": "Heavy grapple fighter evolved over 34 generations.",
+  "color": "#3b82f6",
+  "segments": [
+    {
+      "name": "head",
+      "shape_type": "circle",
+      "radius": 0.25,
+      "mass": 0.6,
+      "moment_of_inertia": 0.03,
+      "relative_position": [0.0, 1.0]
+    },
+    {
+      "name": "torso",
+      "shape_type": "polygon",
+      "mass": 3.0,
+      "moment_of_inertia": 0.25,
+      "relative_position": [0.0, 0.3],
+      "vertices": [
+        [-0.25, -0.4],
+        [0.25, -0.4],
+        [0.25, 0.4],
+        [-0.25, 0.4]
+      ]
+    },
+    {
+      "name": "left_arm",
+      "shape_type": "polygon",
+      "mass": 0.5,
+      "moment_of_inertia": 0.04,
+      "relative_position": [-0.55, 0.4],
+      "vertices": [
+        [-0.35, -0.08],
+        [0.1, -0.08],
+        [0.1, 0.08],
+        [-0.35, 0.08]
+      ]
+    },
+    {
+      "name": "right_arm",
+      "shape_type": "polygon",
+      "mass": 0.5,
+      "moment_of_inertia": 0.04,
+      "relative_position": [0.55, 0.4],
+      "vertices": [
+        [-0.1, -0.08],
+        [0.35, -0.08],
+        [0.35, 0.08],
+        [-0.1, 0.08]
+      ]
+    },
+    {
+      "name": "left_leg",
+      "shape_type": "polygon",
+      "mass": 0.7,
+      "moment_of_inertia": 0.06,
+      "relative_position": [-0.15, -0.4],
+      "vertices": [
+        [-0.09, -0.4],
+        [0.09, -0.4],
+        [0.09, 0.2],
+        [-0.09, 0.2]
+      ]
+    },
+    {
+      "name": "right_leg",
+      "shape_type": "polygon",
+      "mass": 0.7,
+      "moment_of_inertia": 0.06,
+      "relative_position": [0.15, -0.4],
+      "vertices": [
+        [-0.09, -0.4],
+        [0.09, -0.4],
+        [0.09, 0.2],
+        [-0.09, 0.2]
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "name": "neck",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "head",
+      "anchor_parent": [0.0, 0.4],
+      "anchor_child": [0.0, -0.25],
+      "max_torque": 20.0
+    },
+    {
+      "name": "left_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_arm",
+      "anchor_parent": [-0.25, 0.3],
+      "anchor_child": [0.1, 0.0],
+      "max_torque": 70.0
+    },
+    {
+      "name": "right_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_arm",
+      "anchor_parent": [0.25, 0.3],
+      "anchor_child": [-0.1, 0.0],
+      "max_torque": 70.0
+    },
+    {
+      "name": "left_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_leg",
+      "anchor_parent": [-0.15, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 55.0
+    },
+    {
+      "name": "right_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_leg",
+      "anchor_parent": [0.15, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 55.0
+    }
+  ],
+  "components": {
+    "left_arm": [
+      {
+        "name": "Heavy Claw Left",
+        "component_type": "weapon",
+        "weapon_type": "RAM",
+        "mass": 0.4,
+        "durability": 150.0,
+        "energy_consumption": 0.0,
+        "damage_multiplier": 2.2
+      }
+    ],
+    "right_arm": [
+      {
+        "name": "Heavy Claw Right",
+        "component_type": "weapon",
+        "weapon_type": "RAM",
+        "mass": 0.4,
+        "durability": 150.0,
+        "energy_consumption": 0.0,
+        "damage_multiplier": 2.2
+      }
+    ]
+  }
+}

@@ -1,128 +1,62 @@
-# RoboForge Arena 🤖⚡
+# RoboForge Arena
 
-A custom 2D Physics Engine built from scratch in Python with Reinforcement Learning (PPO) and Genetic Algorithm (GA) locomotion evolution.
+A robot combat simulation platform built entirely on a from-scratch 2D physics engine: design robots from modular components, train them to fight with reinforcement learning or evolutionary algorithms, and run local battles where combat emerges from real physics — no scripted attack animations.
 
-![RL Locomotion Demo](scripts/ppo_hopper_locomotion.gif)
-*PPO-trained policy driving a 2-segment articulated creature in the custom physics engine.*
+Built as a portfolio project demonstrating physics simulation, applied ML (RL + evolutionary computation), and game-systems design in one coherent codebase.
 
----
+**Scope note:** real networked multiplayer, matchmaking, ranked servers, and a robot marketplace are part of the long-term vision but are *not* part of the current build — see `docs/05_FUTURE_VISION.md` for why. What's here is local: a single machine, two robots in a shared simulation, real physics-driven combat.
 
-## 🌟 Key Features
+## How to use this repo with an AI coding agent
 
-1. **Custom 2D Physics Engine (Zero Physics Libraries)**
-   - **Vector Math Engine**: 2D vector class (`Vec2`) supporting dot products, scalar cross products, and rotations.
-   - **Rigid Body Dynamics**: Mass, moment of inertia, force/torque integration via semi-implicit Euler method.
-   - **SAT Collision Detection**: Separating Axis Theorem (SAT) narrow-phase collision handling for convex polygons and circles with AABB broad-phase filtering.
-   - **Impulse & Friction Resolver**: Normal restitution impulse, Coulomb friction tangent impulses, angular momentum transfer, and Baumgarte positional penetration correction.
-   - **Joint Constraints**: `DistanceJoint` and `RevoluteJoint` constraint solvers with Baumgarte bias stabilization and motor torque support.
+Read files in this order, and **only** load what's needed for the stage you're working on — don't dump the whole `docs/` folder into context at once.
 
-2. **Data-Driven Creature Morphology & Gymnasium Environment**
-   - JSON-defined creature morphology specification schema (`CreatureSpec`, `SegmentSpec`, `JointSpec`).
-   - `CreatureEnv` wrapping Gymnasium standard interface for continuous RL control.
+1. **Always load first, every session:** `docs/00_PROJECT_CONTEXT.md` and `docs/02_AGENT_RULES.md`
+2. **Load once, keep for reference:** `docs/01_ARCHITECTURE.md`
+3. **Load when touching physics/RL/GA/combat math specifically:** `docs/03_DOMAIN_GLOSSARY.md`
+4. **Load to pick the next unit of work:** `docs/04_IMPLEMENTATION_PLAN.md`
+5. **Load exactly one file at a time:** `docs/stages/stage_NN_*.md` — the actual spec for what to build right now
+6. **For anything about multiplayer/marketplace/community features:** `docs/05_FUTURE_VISION.md` — this is direction, not a stage to implement
 
-3. **Dual Learning Approaches**
-   - **Reinforcement Learning (PPO)**: Policy gradient learning with Stable-Baselines3.
-   - **Genetic Algorithm Evolution (GA)**: Hand-rolled Neural Network MLP controller (`NNController`) evolved via tournament selection, uniform crossover, Gaussian mutation, and elitism.
+After finishing a stage, append a short entry to `PROGRESS_LOG.md` before moving to the next stage.
 
----
+## Quick start
 
-## 📊 RL vs Evolution Locomotion Benchmark
-
-![RL vs GA Locomotion Benchmark](scripts/rl_vs_ga_comparison.png)
-
-| System | Training Approach | Architecture | Mean Return | Mean Episode Steps |
-|---|---|---|---|---|
-| **PPO (RL)** | Policy Gradient | SB3 MlpPolicy | ~142.5 | 500.0 (Full Episode) |
-| **GA (Evolution)** | Neuroevolution | Custom MLP (16 hidden) | ~514.5 | 500.0 (Full Episode) |
-
----
-
-## 🚀 Quickstart Guide
-
-### 1. Installation
 ```bash
+python -m venv venv
+source venv/bin/activate  # venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-### 2. Run Test Suite (Stages 01 – 14)
-```bash
-pytest tests/ -v
-```
+## Build phases
 
-### 3. Run Locomotion Demos
-- **Run PPO RL Walker Demo**:
-  ```bash
-  python -m scripts.demo_walker
-  ```
-- **Run Evolved GA Controller Demo**:
-  ```bash
-  python -m scripts.demo_evolution
-  ```
-- **Run Side-by-Side Comparison**:
-  ```bash
-  python -m scripts.demo_comparison
-  ```
+| Phase | What it covers |
+|---|---|
+| 1 | Physics engine + a generic creature trained to move (RL + evolution) |
+| 2 | Robot component system — chassis/armor/limbs/weapons/sensors/energy with real tradeoffs |
+| 3 | Combat mechanics — physics-derived damage, weapons, a local 1v1 arena |
+| 4 | Combat intelligence — RL self-play and evolutionary combat fitness |
+| 5 | Replay and spectator polish |
+| 6 | Sandbox and structured experiment modes |
+| 7 | Post-battle analytics |
 
----
+Full stage-by-stage detail in `docs/04_IMPLEMENTATION_PLAN.md`. Multiplayer/platform features beyond this are in `docs/05_FUTURE_VISION.md`, deliberately not staged.
 
-## 📐 System Architecture
-
-```mermaid
-graph TD
-    subgraph Physics Core
-        Vec2[Vec2 Math] --> Body[RigidBody]
-        Shapes[Circle / Polygon / AABB] --> Collision[SAT Collision Detector]
-        Collision --> Resolver[Impulse Resolver]
-        Joints[Distance & Revolute Joints] --> World[Physics World Integration Loop]
-        Body --> World
-        Resolver --> World
-    end
-
-    subgraph Creature & Environment
-        World --> Builder[Creature Builder]
-        Spec[JSON Morphology Spec] --> Builder
-        Builder --> Env[CreatureEnv Gymnasium Wrapper]
-    end
-
-    subgraph Intelligence & Control
-        Env --> PPO[Stable-Baselines3 PPO]
-        Env --> NN[Hand-Rolled NNController MLP]
-        NN --> GA[Genetic Algorithm Engine]
-    end
-```
-
----
-
-## 📁 Repository Structure
+## Project structure (target — built incrementally, stage by stage)
 
 ```
-├── physics/                 # Custom 2D Physics Engine Core
-│   ├── vec2.py              # 2D Vector math operations
-│   ├── body.py              # RigidBody dynamics & Euler integrator
-│   ├── shapes.py            # Convex collision shapes (Circle, Polygon, AABB)
-│   ├── collision.py         # SAT collision detection & broad-phase AABB
-│   ├── resolver.py          # Impulse-based restitution & friction solver
-│   ├── joints.py            # Distance & Revolute joint constraint solver
-│   └── world.py             # Simulation loop & step manager
-├── creatures/               # Creature Morphology Framework
-│   ├── morphology.py        # Spec schemas & creature builder
-│   └── presets/             # Creature JSON presets (hopper.json)
-├── rl/                      # Reinforcement Learning Integration
-│   ├── env.py               # CreatureEnv Gymnasium wrapper
-│   └── train_ppo.py         # PPO training pipeline
-├── evolution/               # Evolutionary Computation Engine
-│   ├── nn_controller.py     # Hand-rolled MLP neural network policy
-│   ├── population.py        # Genome population container & evaluator
-│   └── ga.py                # Tournament selection, crossover, mutation, & elitism
-├── render/                  # Renderer Engine
-│   └── renderer.py          # Pygame renderer & screen coordinate transform
-├── scripts/                 # Execution Scripts & Demos
-│   ├── sanity_check_env.py  # Environment audit script
-│   ├── train_and_record_ppo.py # PPO training & GIF recorder
-│   ├── plot_evolution.py    # GA evolution & GIF recorder
-│   ├── demo_walker.py       # PPO policy visual demo
-│   ├── demo_evolution.py    # Evolved GA controller visual demo
-│   └── demo_comparison.py   # Side-by-side benchmark runner
-├── tests/                   # Comprehensive Test Suite (Stages 01 - 14)
-└── PROGRESS_LOG.md          # Stage-by-stage implementation log
+physics_rl_sandbox/
+├── physics/        # vector math, rigid bodies, collision, joints, world loop
+├── render/         # pygame rendering
+├── creatures/      # data-driven articulated-body format
+├── rl/             # gymnasium environment + PPO training
+├── evolution/      # NN controller + genetic algorithm
+├── robots/         # robot component system, built on creatures/
+├── combat/         # damage, weapons, local arena, combat RL environment
+├── replay/         # match recording and playback
+├── sandbox/        # free-play and structured experiments
+├── analytics/      # post-battle reports
+├── scripts/        # demo/sanity-check entry points
+└── tests/          # unit tests, one set per module
 ```
+
+Full detail in `docs/01_ARCHITECTURE.md`.

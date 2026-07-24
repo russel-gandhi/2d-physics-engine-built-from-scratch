@@ -76,6 +76,28 @@ Replay and spectator polish for the local matches Phase 3-4 produce.
 |---|-----------|--------|-------------|
 | 27 | `stage_27_battle_analytics.md` | Post-battle report from real replay data | 23 |
 
+## Phase 8 — UI Dashboard
+
+A local web dashboard over the existing simulation — Playground, Gym, and Competitive modes. Flat terrain only; see Phase 9.
+
+| # | Stage file | Builds | Depends on |
+|---|-----------|--------|-------------|
+| 28 | `stage_28_dashboard_backend.md` | FastAPI + WebSocket server, state streaming, control endpoints | 06, 19 |
+| 29 | `stage_29_frontend_shell_renderer.md` | Mode shell, WebSocket client, canvas renderer for articulated bodies | 28 |
+| 30 | `stage_30_playground_ui.md` | Playground mode — spawn, gravity, terrain reset | 29, 25 |
+| 31 | `stage_31_gym_ui.md` | Gym mode — live population grid (GA genomes / PPO parallel rollouts), promote-to-roster | 29, 10, 12 |
+| 32 | `stage_32_fighter_archetype_presets.md` | Named fighter presets (Boxer, Grappler, etc.) on the existing component system | 16 |
+| 33 | `stage_33_fighter_roster_selection.md` | Persistent roster of trained fighters, fed by Gym, read by Competitive | 31, 32 |
+| 34 | `stage_34_competitive_ui.md` | Competitive mode — pick fighters from the roster, live viewport, autonomous policies only | 29, 33, 20 |
+| 35 | `stage_35_ui_integration_polish.md` | Replay/battle-report hookup, cross-mode nav, anti-hardcoding audit for the UI layer | 30, 31, 34 |
+| 36 | `stage_36_llm_integration_foundation.md` | Shared Gemini API client, safe key handling, structured-output validation | 28 |
+| 37 | `stage_37_natural_language_training_prompts.md` | Text-box training prompts → real, inspectable reward/fitness config | 36, 31, 10, 12 |
+| 38 | `stage_38_live_match_commentary.md` | Async, throttled, clearly-labeled live match commentary | 36, 34, 20 |
+
+## Phase 9 — Terrain Variety (planned next, not yet staged)
+
+Hills, gaps, and stairs for Gym mode. Deliberately sequenced after Phase 8 per an explicit decision — needs real physics work (varied terrain geometry, spawn logic that works across terrain types) before it gets stage files. Don't start this from a UI stage's momentum; it gets its own stage docs when picked up.
+
 ## Not staged — see `05_FUTURE_VISION.md`
 
 Real networked multiplayer, matchmaking, ranked ladders, cross-machine tournaments, robot marketplace, community rankings.

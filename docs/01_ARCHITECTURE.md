@@ -41,6 +41,19 @@ physics_rl_sandbox/
 │   └── experiment.py
 ├── analytics/                    # Phase 7 — post-battle reports
 │   └── battle_report.py
+├── web/                            # Phase 8 — local dashboard: backend + frontend
+│   ├── server.py                     # FastAPI app + WebSocket state streaming, mode/control endpoints
+│   ├── state_encoder.py               # World/Arena state -> JSON per tick (positions, angles, hp, rewards)
+│   ├── fighter_roster.py               # persistent store of trained fighters (checkpoint/genome + stats)
+│   ├── llm_client.py                    # shared Gemini API client — structured config parsing + commentary
+│   └── frontend/                       # HTML/CSS/JS — mode shell, canvas renderer, per-mode panels
+│       ├── index.html
+│       ├── app.js                        # WebSocket client, mode router, canvas draw loop
+│       ├── renderer.js                    # shared articulated-body drawing, used by all modes
+│       ├── playground.js
+│       ├── gym.js                          # includes the live population grid + training prompt box
+│       ├── roster.js
+│       └── competitive.js                  # includes the AI commentary panel
 ├── scripts/                       # entry points across all phases
 ├── tests/                           # unit tests per module — see each stage file for required cases
 └── docs/                             # this folder
@@ -68,6 +81,10 @@ physics_rl_sandbox/
 **Phase 7 (analytics):**
 - `analytics/battle_report.py` reads a `replay/recorder.py` log after a match and computes real statistics from it (damage %, movement efficiency, successful attack count) — plus simple rule-based weakness flags (e.g. "slow recovery" if time-to-right-itself-after-a-knockdown exceeds a threshold in the log). These flags are derived from logged numbers, not invented.
 
+**Phase 8 (UI dashboard):**
+- `web/server.py` doesn't run its own simulation logic — it drives the existing `sandbox/sandbox_mode.py` (Playground), `rl/train_ppo.py` / `evolution/ga.py` (Gym), and `combat/arena.py` / `combat_env.py` (Competitive) exactly as those modules already work, and streams their real state over WebSocket every tick via `web/state_encoder.py`. The browser never computes physics or decides an outcome — it only renders what the backend sends and forwards user actions (spawn, start training, start match) back as requests. In Competitive mode, robot actions come only from a loaded policy (PPO checkpoint or evolved `NNController`) via `combat_env.py` — the UI has no manual attack controls, matching "robots choose their own strategy."
+- `web/llm_client.py` is called in exactly two places, both outside the real-time simulation loop: once at the start of a Gym training run (Stage 37, translating a text prompt into real reward/fitness weights that then get used for actual training) and periodically (every few seconds, async, non-blocking) during a Competitive match (Stage 38, generating commentary from real telemetry). The LLM never decides a robot's action — that always comes from the trained policy/genome, matching rule 8 in `02_AGENT_RULES.md`.
+
 ## Key interfaces (do not change signatures without updating this file)
 
 - `RigidBody.apply_force(force, point)`, `World.step(dt)`, `CreatureEnv` — unchanged from Phase 1, see stage 01-14 files for exact signatures.
@@ -86,5 +103,8 @@ physics_rl_sandbox/
 | Evolution NN | `numpy` or `torch` | hand-rolled forward pass either way |
 | Replay storage | stdlib (`json` or `pickle`) | no new dependency needed — a log of per-step state is enough |
 | Plots | `matplotlib` | reward/fitness curves, battle stats |
+| UI backend | `FastAPI` + `uvicorn`, WebSocket | streams real simulation state; no physics/decision logic lives here |
+| UI frontend | plain HTML/CSS/JS, `<canvas>` | draws robots from streamed joint positions — no separate rendering logic that could drift from the real simulation |
+| LLM | Gemini API | text-prompt-to-reward-config (Stage 37) and live match commentary (Stage 38) only — never in the physics/action loop, see `02_AGENT_RULES.md` rule 8 |
 
 Library choice elsewhere is open — add `scipy` or anything else that fits, as long as you understand what it's doing.

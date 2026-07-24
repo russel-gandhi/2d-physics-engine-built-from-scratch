@@ -25,6 +25,8 @@ class World:
         self.restitution: float = float(restitution)
         self.friction: float = float(friction)
         self.last_contacts: list[Contact] = []
+        self.time: float = 0.0
+        self.step_count: int = 0
 
     def add_body(self, body: RigidBody) -> None:
         """Add a rigid body to the world."""
@@ -38,6 +40,8 @@ class World:
 
     def step(self, dt: float) -> None:
         """Advance simulation by fixed timestep dt."""
+        self.time += dt
+        self.step_count += 1
         # 1. Apply motor torques to RevoluteJoints
         for joint in self.joints:
             if isinstance(joint, RevoluteJoint):

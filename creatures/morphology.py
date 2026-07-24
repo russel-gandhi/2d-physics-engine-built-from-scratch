@@ -47,9 +47,10 @@ class CreatureSpec:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CreatureSpec:
         """Construct CreatureSpec from dictionary representation."""
+        name = data.get("name", data.get("display_name", "Robot"))
         segments = [SegmentSpec(**s) for s in data["segments"]]
         joints = [JointSpec(**j) for j in data["joints"]]
-        return cls(name=data["name"], segments=segments, joints=joints)
+        return cls(name=name, segments=segments, joints=joints)
 
     @classmethod
     def from_json(cls, json_path: str) -> CreatureSpec:

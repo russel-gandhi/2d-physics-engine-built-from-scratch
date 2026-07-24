@@ -10,6 +10,7 @@ The current build has two layers on the same physics core:
 
 - **Foundation (Phase 1):** the hand-built physics engine itself — rigid bodies, collision, joints — plus a generic articulated "creature" that can be trained to locomote via RL (PPO) or evolved via a genetic algorithm. This is the substrate everything else stands on.
 - **RoboForge (Phases 2-7):** robots as specialized creatures assembled from components (chassis, armor, limbs, weapons, sensors, energy), combat mechanics (physics-derived damage, no scripted hits), combat-trained fighters (RL self-play + evolutionary tournaments), local 1v1 battles with replay, a sandbox and structured experiment mode, and post-battle analytics reports.
+- **UI Dashboard (Phase 8):** a local web dashboard — the simulation core stays exactly as built; a thin backend streams live state over WebSocket to a browser frontend with three modes: **Playground** (free sandbox), **Gym** (train PPO/GA agents, flat terrain for now — terrain variety is Phase 9, sequenced after the UI), and **Competitive** (local 1v1 matches, robots choosing their own strategy from training — never manual/scripted input). Robots render as articulated joint figures (circles at joints, lines for limbs), and fighter presets carry archetype names (e.g. "Boxer", "Grappler") on top of the existing component system from Phase 2 — this is presentation and preset variety, not a new combat mechanic.
 
 **Not in the current build** (see `05_FUTURE_VISION.md`): real networked multiplayer, matchmaking, ranked ladders, tournaments run across machines, a robot marketplace, community rankings. These require server/networking infrastructure that is a different scale of engineering than everything above combined — that doc explains why they're documented separately instead of staged.
 
@@ -39,6 +40,7 @@ The current build has two layers on the same physics core:
 ## Non-goals for the current build
 
 - 3D physics
+- **Terrain variety (hills, gaps, stairs)** — Gym mode currently trains and displays on flat terrain only. This was deliberately sequenced after the UI (Phase 8) rather than before it, and will become its own phase once picked up — don't quietly add partial terrain support inside a UI stage.
 - **Real networked multiplayer, matchmaking, ranked servers, tournaments across machines, a robot marketplace, community rankings** — see `05_FUTURE_VISION.md`. "Local 1v1 battle" (two robots in the same simulation on one machine) is in scope and is *not* the same thing as networked multiplayer — don't build a fake/stubbed networking layer to simulate the appearance of this; build the honest local version instead.
 - A full GUI level/robot editor — sandbox and experiment modes (Phase 6) are script/keybinding-driven, not a drag-and-drop UI
 - Hand-rolled PPO (using `stable-baselines3` is intentional — see the domain glossary)

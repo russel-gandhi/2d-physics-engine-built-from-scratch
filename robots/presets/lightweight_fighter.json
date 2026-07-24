@@ -1,68 +1,129 @@
 {
-  "name": "Lightweight Fighter",
+  "name": "Boxer-ppo-v2",
+  "display_name": "Boxer-ppo-v2",
+  "description": "Fast lightweight agile striker.",
+  "color": "#ef4444",
   "segments": [
+    {
+      "name": "head",
+      "shape_type": "circle",
+      "radius": 0.22,
+      "mass": 0.4,
+      "moment_of_inertia": 0.015,
+      "relative_position": [0.0, 1.0]
+    },
     {
       "name": "torso",
       "shape_type": "polygon",
-      "mass": 1.2,
-      "moment_of_inertia": 0.1,
-      "relative_position": [0.0, 0.0],
+      "mass": 2.0,
+      "moment_of_inertia": 0.15,
+      "relative_position": [0.0, 0.3],
       "vertices": [
-        [-0.4, -0.2],
-        [0.4, -0.2],
-        [0.4, 0.2],
-        [-0.4, 0.2]
+        [-0.18, -0.4],
+        [0.18, -0.4],
+        [0.18, 0.4],
+        [-0.18, 0.4]
       ]
     },
     {
-      "name": "leg",
+      "name": "left_arm",
       "shape_type": "polygon",
-      "mass": 0.4,
-      "moment_of_inertia": 0.04,
-      "relative_position": [0.0, -0.7],
+      "mass": 0.3,
+      "moment_of_inertia": 0.02,
+      "relative_position": [-0.45, 0.4],
       "vertices": [
-        [-0.1, -0.4],
-        [0.1, -0.4],
-        [0.1, 0.4],
-        [-0.1, 0.4]
+        [-0.25, -0.07],
+        [0.1, -0.07],
+        [0.1, 0.07],
+        [-0.25, 0.07]
+      ]
+    },
+    {
+      "name": "right_arm",
+      "shape_type": "polygon",
+      "mass": 0.3,
+      "moment_of_inertia": 0.02,
+      "relative_position": [0.45, 0.4],
+      "vertices": [
+        [-0.1, -0.07],
+        [0.25, -0.07],
+        [0.25, 0.07],
+        [-0.1, 0.07]
+      ]
+    },
+    {
+      "name": "left_leg",
+      "shape_type": "polygon",
+      "mass": 0.5,
+      "moment_of_inertia": 0.04,
+      "relative_position": [-0.12, -0.4],
+      "vertices": [
+        [-0.07, -0.4],
+        [0.07, -0.4],
+        [0.07, 0.2],
+        [-0.07, 0.2]
+      ]
+    },
+    {
+      "name": "right_leg",
+      "shape_type": "polygon",
+      "mass": 0.5,
+      "moment_of_inertia": 0.04,
+      "relative_position": [0.12, -0.4],
+      "vertices": [
+        [-0.07, -0.4],
+        [0.07, -0.4],
+        [0.07, 0.2],
+        [-0.07, 0.2]
       ]
     }
   ],
   "joints": [
     {
-      "name": "hip",
+      "name": "neck",
       "joint_type": "revolute",
       "parent_segment": "torso",
-      "child_segment": "leg",
-      "anchor_parent": [0.0, -0.2],
-      "anchor_child": [0.0, 0.4],
+      "child_segment": "head",
+      "anchor_parent": [0.0, 0.4],
+      "anchor_child": [0.0, -0.22],
+      "max_torque": 15.0
+    },
+    {
+      "name": "left_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_arm",
+      "anchor_parent": [-0.18, 0.3],
+      "anchor_child": [0.1, 0.0],
+      "max_torque": 50.0
+    },
+    {
+      "name": "right_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_arm",
+      "anchor_parent": [0.18, 0.3],
+      "anchor_child": [-0.1, 0.0],
+      "max_torque": 50.0
+    },
+    {
+      "name": "left_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_leg",
+      "anchor_parent": [-0.12, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 45.0
+    },
+    {
+      "name": "right_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_leg",
+      "anchor_parent": [0.12, -0.4],
+      "anchor_child": [0.0, 0.2],
       "max_torque": 45.0
     }
   ],
-  "components": {
-    "torso": [
-      {
-        "name": "Lightweight Alloy Chassis",
-        "component_type": "chassis",
-        "mass": 1.0,
-        "durability": 150.0
-      },
-      {
-        "name": "High-Efficiency Battery",
-        "component_type": "energy_system",
-        "mass": 0.5,
-        "durability": 80.0,
-        "properties": {"capacity": 300.0}
-      }
-    ],
-    "leg": [
-      {
-        "name": "High Speed Servo Motor",
-        "component_type": "motor",
-        "mass": 0.3,
-        "durability": 60.0,
-        "energy_consumption": 1.5
-      }
-    ]
-  }
+  "components": {}
 }

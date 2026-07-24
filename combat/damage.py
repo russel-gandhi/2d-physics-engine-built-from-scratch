@@ -49,6 +49,7 @@ class DamageSystem:
         self.threshold = threshold
         self.damage_scale = damage_scale
         self.body_to_robot_segment: dict[int, tuple[Robot, str]] = {}
+        self.damage_history: list[dict[str, Any]] = []
 
     def register_robot(self, robot: Robot) -> None:
         """Register robot body IDs to enable automatic damage tracking upon collision."""
@@ -65,9 +66,23 @@ class DamageSystem:
         if id(body_a) in self.body_to_robot_segment:
             robot_a, seg_a = self.body_to_robot_segment[id(body_a)]
             dmg_a = apply_impulse_damage(robot_a, seg_a, impulse_mag, threshold=self.threshold, scale=self.damage_scale)
+            if dmg_a > 0.0:
+                self.damage_history.append({
+                    "robot": robot_a.robot_spec.name,
+                    "segment_id": seg_a,
+                    "damage": dmg_a,
+                    "impulse": impulse_mag,
+                })
 
         if id(body_b) in self.body_to_robot_segment:
             robot_b, seg_b = self.body_to_robot_segment[id(body_b)]
             dmg_b = apply_impulse_damage(robot_b, seg_b, impulse_mag, threshold=self.threshold, scale=self.damage_scale)
+            if dmg_b > 0.0:
+                self.damage_history.append({
+                    "robot": robot_b.robot_spec.name,
+                    "segment_id": seg_b,
+                    "damage": dmg_b,
+                    "impulse": impulse_mag,
+                })
 
         return dmg_a, dmg_b

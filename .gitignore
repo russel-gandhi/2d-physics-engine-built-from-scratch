@@ -9,5 +9,8 @@ tensorboard_logs/
 checkpoints/*
 !checkpoints/.gitkeep
 
+# Secrets — never commit a real API key
+.env
+
 # OS
 .DS_Store

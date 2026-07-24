@@ -13,9 +13,9 @@ def test_readme_exists_and_contains_sections():
         content = f.read()
 
     assert "# RoboForge Arena" in content
-    assert "Custom 2D Physics Engine" in content
-    assert "Quickstart Guide" in content
-    assert "System Architecture" in content
+    assert "from-scratch 2D physics engine" in content
+    assert "Quick start" in content
+    assert "Project structure" in content
 
 
 def test_codebase_anti_hardcoding_audit():

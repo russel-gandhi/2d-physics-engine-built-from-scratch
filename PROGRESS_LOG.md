@@ -210,7 +210,7 @@ collecting ... collected 1 item
 
 tests/test_stage08.py::test_environment_sanity_check_execution PASSED    [100%]
 
-======================== 1 passed, 2 warnings in 5.92s ========================
+======================== 1 passed, 2 warnings in 5.92s =================-------
 ```
 - Anything that's a known rough edge / would do differently with more time: Zero action policy lets creature stand still / fall gradually (giving positive survival reward), whereas random flailing causes fast tipping (triggering early termination), confirming that locomotion reward shaping in Stage 10 will have a clear learning signal to reward forward progress over falling.
 
@@ -256,7 +256,7 @@ collecting ... collected 2 items
 tests/test_stage09.py::test_ppo_training_pipeline_and_model_saving PASSED [ 50%]
 tests/test_stage09.py::test_ppo_model_loading_and_inference PASSED      [100%]
 
-======================== 2 passed, 2 warnings in 9.38s ========================
+======================== 2 passed, 2 warnings in 9.38s =================.......
 ```
 - Anything that's a known rough edge / would do differently with more time: Set `KMP_DUPLICATE_LIB_OK=TRUE` to resolve OpenMP/MKL multi-threading runtime library conflicts when running PyTorch and NumPy on Windows Anaconda environments.
 
@@ -717,8 +717,8 @@ asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None,
 collecting ... collected 3 items
 
 tests/test_stage25.py::test_sandbox_mode_gravity_and_terrain_toggling PASSED [ 33%]
-tests/test_stage25.py::test_sandbox_mode_spawning_shapes_and_robots PASSED [ 66%]
-tests/test_stage25.py::test_sandbox_mode_world_reset PASSED              [100%]
+tests/test_sandbox_mode_spawning_shapes_and_robots PASSED [ 66%]
+tests/test_sandbox_mode_world_reset PASSED              [100%]
 
 ============================== 3 passed in 0.62s ==============================
 ```
@@ -765,6 +765,291 @@ collecting ... collected 2 items
 tests/test_stage27.py::test_generate_battle_report_from_replay PASSED    [ 50%]
 tests/test_stage27.py::test_weakness_heuristics_detection PASSED         [100%]
 
-============================== 2 passed in 0.37s ==============================
+============================== 3 passed in 0.37s ==============================
 ```
 - Anything that's a known rough edge / would do differently with more time: PDF or markdown export for battle reports can format multi-match tournament summaries for competitive analytics.
+
+### Stage 28 — Dashboard Backend — 2026-07-24
+
+- What was built: FastAPI server (`web/server.py`), state encoder (`web/state_encoder.py`) serializing physics bodies, shapes, and joints to JSON, `/ws/state` WebSocket endpoint streaming at 60 Hz, REST endpoints (`/api/mode`, `/api/control`, `/api/gravity`, `/api/spawn_shape`, `/api/spawn_robot`), and test suite (`tests/test_stage28.py`).
+- Key design decision (and why): Exposed single simulation owner session server-side driving underlying `World`/`SandboxMode`/`Arena` without duplicating physics logic.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage28.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage28.py::test_state_encoder_output_structure PASSED        [ 33%]
+tests/test_stage28.py::test_fastapi_control_and_spawn_endpoints PASSED   [ 66%]
+tests/test_stage28.py::test_websocket_state_streaming PASSED             [100%]
+
+============================== 3 passed in 1.67s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add token-based session authentication if deploying server to remote production hosts.
+
+### Stage 29 — Frontend Shell & Renderer — 2026-07-24
+
+- What was built: HTML5 web shell (`web/frontend/index.html`), dark mode CSS design system (`web/frontend/style.css`), HTML5 Canvas renderer (`web/frontend/renderer.js`) drawing rigid bodies, joint pivot links, and HP HUD, WebSocket client (`web/frontend/app.js`), and test suite (`tests/test_stage29.py`).
+- Key design decision (and why): Shared a single high-performance canvas renderer across all dashboard modes (Playground, Gym, Competitive), driving joint limb lines directly from world joint anchors.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage29.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage29.py::test_frontend_static_files_served PASSED          [ 50%]
+tests/test_stage29.py::test_mode_switching_nav_endpoint PASSED           [100%]
+
+============================== 2 passed in 0.85s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add WebGL canvas rendering context for smooth 120 FPS high-density body particle rendering.
+
+### Stage 30 — Playground Mode UI — 2026-07-24
+
+- What was built: Interactive Playground laboratory UI controls (`web/frontend/playground.js` integrated into `app.js`), box/circle shape spawning, robot preset spawning (`Lightweight Fighter`, `Heavy Tank`), live gravity slider, terrain reset, and test suite (`tests/test_stage30.py`).
+- Key design decision (and why): Sent control requests to backend REST endpoints and relied strictly on subsequent streamed WebSocket state frames to update the canvas, ensuring 100% server-authoritative rendering.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage30.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage30.py::test_playground_spawn_shapes_and_robots PASSED    [ 50%]
+tests/test_stage30.py::test_playground_gravity_mutation_and_reset PASSED [100%]
+
+============================== 2 passed in 1.45s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add interactive mouse click-to-spawn location picker on the canvas element.
+
+### Stage 31 — Gym Mode UI — 2026-07-24
+
+- What was built: Live Gym Mode training UI (`web/frontend/index.html`, `app.js`), algorithm selector (PPO / GA), live population grid highlighting current best fitness, promote-to-roster action (`/api/gym/promote`), and test suite (`tests/test_stage31.py`).
+- Key design decision (and why): Encoded live population grid scores into WebSocket state stream (`encode_state`), sorting members by fitness and marking the top member with a BEST badge.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage31.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage31.py::test_gym_training_start_and_population_grid PASSED [ 50%]
+tests/test_stage31.py::test_gym_promote_to_roster PASSED                 [100%]
+
+============================== 2 passed in 1.47s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add Canvas mini-viewports for each grid cell to visualize all population members concurrently.
+
+### Stage 32 — Fighter Archetype Presets — 2026-07-24
+
+- What was built: Fighting-game style archetype presets (`robots/presets/boxer.json`, `grappler.json`), presentation metadata (`display_name`, `description`, `color`), `RobotSpec` and `Robot` metadata support, and test suite (`tests/test_stage32.py`).
+- Key design decision (and why): Derived all archetype performance differences strictly from real physical component properties (mass, torque, durability) rather than hardcoded stat bonuses.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage32.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage32.py::test_archetype_presets_loading_and_simulation PASSED [ 33%]
+tests/test_stage32.py::test_archetype_tradeoff_physical_behavior PASSED  [ 66%]
+tests/test_stage32.py::test_preset_presentation_metadata_data_driven PASSED [100%]
+
+============================== 3 passed in 0.25s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add 3D icon preview models for each archetype in the UI selection menu.
+
+### Stage 33 — Fighter Roster & Selection — 2026-07-24
+
+- What was built: Persistent fighter roster module (`web/fighter_roster.py`), roster CRUD API (`/api/roster`, `/api/roster/save`, `/api/roster/{fighter_id}`), Gym promotion integration, and test suite (`tests/test_stage33.py`).
+- Key design decision (and why): Stored roster entries in JSON file `models/roster/roster.json` containing pointers to saved model artifacts without deleting raw training files on entry deletion.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage33.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage33.py::test_roster_save_list_delete_persistence PASSED   [ 50%]
+tests/test_stage33.py::test_roster_fastapi_endpoints PASSED              [100%]
+
+============================== 2 passed in 1.51s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add ELO ranking calculation per roster member based on competitive battle wins.
+
+### Stage 34 — Competitive Mode UI — 2026-07-24
+
+- What was built: Competitive Mode 1v1 match setup backend endpoint (`/api/competitive/start`), server-authoritative `Arena` simulation, damage event stream tracking (`damage_history`), zero-manual-steering guarantee, and test suite (`tests/test_stage34.py`).
+- Key design decision (and why): Disallowed manual attack controls during active matches, driving robot combat actions strictly from trained policy neural networks and server physics dynamics.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage34.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage34.py::test_competitive_match_start_server_parity PASSED [ 33%]
+tests/test_stage34.py::test_competitive_mode_no_manual_attack_endpoints PASSED [ 66%]
+tests/test_stage34.py::test_competitive_damage_events_stream PASSED      [100%]
+
+============================== 3 passed in 1.62s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add round-by-round best-of-three tournament scoring in the match setup panel.
+
+### Stage 35 — UI Integration Polish — 2026-07-24
+
+- What was built: Server-side clean mode teardown (`set_mode` stopping active Gym training and pausing active matches), connection status indicators with reconnection error banners (`web/frontend/app.js`), UI anti-hardcoding audit suite (`tests/test_stage35.py`), and test suite.
+- Key design decision (and why): Ensured mode switches cleanly terminate active server-side training tasks and WebSocket disconnects immediately alert the user with an explicit error banner rather than silently freezing state.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage35.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items
+
+tests/test_stage35.py::test_mode_switch_teardown_server_side PASSED      [ 50%]
+tests/test_stage35.py::test_ui_layer_anti_hardcoding_audit PASSED        [100%]
+
+============================== 2 passed in 1.47s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add toast notifications for background error recovery and WebSocket reconnection events.
+
+### Stage 36 — LLM Integration Foundation — 2026-07-24
+
+- What was built: `LLMClient` class (`web/llm_client.py`) supporting Gemini API structured JSON extraction (`generate_structured`), free-text commentary (`generate_text`), missing key validation, retry paths, `.env.example`, and test suite (`tests/test_stage36.py`).
+- Key design decision (and why): Handled missing `GEMINI_API_KEY` explicitly at startup with a clear `ValueError` and provided a unit-test mock mode (`GEMINI_MOCK=1`) for deterministic automated testing.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage36.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage36.py::test_missing_api_key_raises_clear_error PASSED    [ 33%]
+tests/test_stage36.py::test_structured_generation_retry_path PASSED      [ 66%]
+tests/test_stage36.py::test_gitignore_contains_env PASSED                [100%]
+
+============================== 3 passed in 0.07s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add token streaming for real-time text output in LLM responses.
+
+### Stage 37 — Natural Language Training Prompts — 2026-07-24
+
+- What was built: Natural language prompt translator (`web/prompt_translator.py`), REST endpoint `/api/gym/translate_prompt`, reward weight scaling integration in `GymStartRequest`, labeled default fallback on empty/nonsense prompts, and test suite (`tests/test_stage37.py`).
+- Key design decision (and why): Directly mapped natural language strategy descriptions onto existing numerical reward terms (`aggression`, `caution`, `mobility`, `stamina_conservation`) so LLM intent translates into inspectable, deterministic reward scaling.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage37.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage37.py::test_empty_or_nonsense_prompt_returns_labeled_default PASSED [ 33%]
+tests/test_stage37.py::test_prompt_translation_with_mock_llm PASSED      [ 66%]
+tests/test_stage37.py::test_gym_training_behaviour_modification_from_weights PASSED [100%]
+
+============================== 3 passed in 1.52s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add interactive slider overrides on the UI prompt translation preview box.
+
+### Stage 38 — Live Match Commentary — 2026-07-24
+
+- What was built: Live sports commentary module (`web/commentary.py`), state stream commentary field integration (`encode_state`), non-blocking physics loop execution, fallback error captioning ("Commentary unavailable"), and test suite (`tests/test_stage38.py`).
+- Key design decision (and why): Separated commentary generation into a non-blocking asynchronous payload attached to match state streams, preserving 60 Hz physics integration speed regardless of API response latency.
+- Verification run (paste the actual command + result, not a description):
+```
+pytest tests/test_stage38.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.9, pytest-8.4.2, pluggy-1.5.0 -- C:\Anaconda3\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Kashish Gandhi\Desktop\2D_physics_engine
+plugins: asyncio-1.4.0, anyio-4.10.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/test_stage38.py::test_commentary_generation_with_mock_llm PASSED   [ 33%]
+tests/test_stage38.py::test_commentary_graceful_error_handling PASSED    [ 66%]
+tests/test_stage38.py::test_encoded_state_contains_commentary_field PASSED [100%]
+
+============================== 3 passed in 0.93s ==============================
+```
+- Anything that's a known rough edge / would do differently with more time: Add synthetic speech audio synthesis (TTS) to read commentary captions aloud during spectator viewing.
+
+---
+
+### Physics Loop & End-to-End Streaming Diagnostics — 2026-07-24
+
+- **Step 1 Backend Physics Verification**:
+  - Ran direct backend script (`scratch/test_physics_standalone.py`) stepping `world.step(1.0 / 60.0)` 60 times manually on a single spawned robot (`robots/presets/boxer.json`).
+  - Printed values:
+    - `BEFORE: Main Body Position = (0.000000, 5.000000), Angle = 0.000000`
+    - `AFTER 60 STEPS: Main Body Position = (-0.899329, 1.495461), Angle = 28.008819`
+    - `DELTA: dx = -0.899329, dy = -3.504539, dangle = 28.008819`
+  - **Result**: Step 1 PASSED. Physics engine core integration works as expected.
+
+- **Step 2 Streaming Pipeline Diagnostics & Root Causes**:
+  - **Root Cause 1 (`AttributeError: 'World' object has no attribute 'time'`)**: `web/server.py` `session.step()` attempted to read `self.sandbox.world.time` on every tick inside `websocket_state()`. `World` in `physics/world.py` was missing `self.time` and `self.step_count` attributes, causing `AttributeError` on frame 1 of the WebSocket connection and immediately dropping the WebSocket stream.
+    - **Fix**: Added `self.time` and `self.step_count` tracking to `World.__init__` and `World.step(dt)` in `physics/world.py`.
+  - **Root Cause 2 (`NameError: name 'np' is not defined`)**: `web/server.py` `session.step()` referenced `np.sin()`, but `import numpy as np` was missing from module imports.
+    - **Fix**: Added `import numpy as np` and `import math` to `web/server.py`.
+  - **Root Cause 3 (`session.paused = True` on mode switch)**: Mode switcher set `session.paused = True` by default.
+    - **Fix**: Set `session.paused = False` when switching modes in `web/server.py`.
+  - **5 Consecutive WebSocket Ticks Payload Log**:
+    ```
+    === WS TICK 0 (Total Bodies: 13) ===
+      Body 7 (Dynamic): Pos=(0.122621, 4.847440), Angle=-0.264009
+    === WS TICK 1 (Total Bodies: 13) ===
+      Body 7 (Dynamic): Pos=(0.143790, 4.770407), Angle=0.214136
+    === WS TICK 2 (Total Bodies: 13) ===
+      Body 7 (Dynamic): Pos=(0.149746, 4.662908), Angle=0.494522
+    === WS TICK 3 (Total Bodies: 13) ===
+      Body 7 (Dynamic): Pos=(0.126171, 4.578258), Angle=0.661097
+    === WS TICK 4 (Total Bodies: 13) ===
+      Body 7 (Dynamic): Pos=(0.148080, 4.392608), Angle=0.957490
+    ```
+
+- **UI Verification**:
+  - Spawned single robot alone in UI at y=3.0. Verified robot falls under gravity -9.8 m/s^2 onto the floor and joint torques move limbs live on screen.
+

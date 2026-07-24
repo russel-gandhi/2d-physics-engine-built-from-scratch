@@ -1,74 +1,129 @@
 {
-  "name": "Heavy Tank Fighter",
+  "name": "Heavy Tank",
+  "display_name": "Heavy Tank",
+  "description": "Heavily armored juggernaut robot.",
+  "color": "#3b82f6",
   "segments": [
+    {
+      "name": "head",
+      "shape_type": "circle",
+      "radius": 0.3,
+      "mass": 1.0,
+      "moment_of_inertia": 0.05,
+      "relative_position": [0.0, 1.1]
+    },
     {
       "name": "torso",
       "shape_type": "polygon",
-      "mass": 4.0,
-      "moment_of_inertia": 0.5,
-      "relative_position": [0.0, 0.0],
+      "mass": 5.0,
+      "moment_of_inertia": 0.4,
+      "relative_position": [0.0, 0.3],
       "vertices": [
-        [-0.6, -0.3],
-        [0.6, -0.3],
-        [0.6, 0.3],
-        [-0.6, 0.3]
+        [-0.3, -0.4],
+        [0.3, -0.4],
+        [0.3, 0.4],
+        [-0.3, 0.4]
       ]
     },
     {
-      "name": "leg",
+      "name": "left_arm",
       "shape_type": "polygon",
-      "mass": 1.5,
-      "moment_of_inertia": 0.15,
-      "relative_position": [0.0, -0.8],
+      "mass": 0.8,
+      "moment_of_inertia": 0.07,
+      "relative_position": [-0.65, 0.4],
       "vertices": [
-        [-0.15, -0.5],
-        [0.15, -0.5],
-        [0.15, 0.5],
-        [-0.15, 0.5]
+        [-0.4, -0.1],
+        [0.1, -0.1],
+        [0.1, 0.1],
+        [-0.4, 0.1]
+      ]
+    },
+    {
+      "name": "right_arm",
+      "shape_type": "polygon",
+      "mass": 0.8,
+      "moment_of_inertia": 0.07,
+      "relative_position": [0.65, 0.4],
+      "vertices": [
+        [-0.1, -0.1],
+        [0.4, -0.1],
+        [0.4, 0.1],
+        [-0.1, 0.1]
+      ]
+    },
+    {
+      "name": "left_leg",
+      "shape_type": "polygon",
+      "mass": 1.0,
+      "moment_of_inertia": 0.09,
+      "relative_position": [-0.2, -0.4],
+      "vertices": [
+        [-0.12, -0.4],
+        [0.12, -0.4],
+        [0.12, 0.2],
+        [-0.12, 0.2]
+      ]
+    },
+    {
+      "name": "right_leg",
+      "shape_type": "polygon",
+      "mass": 1.0,
+      "moment_of_inertia": 0.09,
+      "relative_position": [0.2, -0.4],
+      "vertices": [
+        [-0.12, -0.4],
+        [0.12, -0.4],
+        [0.12, 0.2],
+        [-0.12, 0.2]
       ]
     }
   ],
   "joints": [
     {
-      "name": "hip",
+      "name": "neck",
       "joint_type": "revolute",
       "parent_segment": "torso",
-      "child_segment": "leg",
-      "anchor_parent": [0.0, -0.3],
-      "anchor_child": [0.0, 0.5],
-      "max_torque": 45.0
+      "child_segment": "head",
+      "anchor_parent": [0.0, 0.4],
+      "anchor_child": [0.0, -0.3],
+      "max_torque": 25.0
+    },
+    {
+      "name": "left_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_arm",
+      "anchor_parent": [-0.3, 0.3],
+      "anchor_child": [0.1, 0.0],
+      "max_torque": 90.0
+    },
+    {
+      "name": "right_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_arm",
+      "anchor_parent": [0.3, 0.3],
+      "anchor_child": [-0.1, 0.0],
+      "max_torque": 90.0
+    },
+    {
+      "name": "left_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_leg",
+      "anchor_parent": [-0.2, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 80.0
+    },
+    {
+      "name": "right_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_leg",
+      "anchor_parent": [0.2, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 80.0
     }
   ],
-  "components": {
-    "torso": [
-      {
-        "name": "Reinforced Steel Chassis",
-        "component_type": "chassis",
-        "mass": 5.0,
-        "durability": 600.0
-      },
-      {
-        "name": "Heavy Composite Armor Plating",
-        "component_type": "armor",
-        "mass": 8.0,
-        "durability": 800.0
-      },
-      {
-        "name": "Heavy Power Cell",
-        "component_type": "energy_system",
-        "mass": 2.0,
-        "durability": 200.0,
-        "properties": {"capacity": 800.0}
-      }
-    ],
-    "leg": [
-      {
-        "name": "Heavy Duty Servo Motor",
-        "component_type": "motor",
-        "mass": 1.0,
-        "durability": 150.0,
-        "energy_consumption": 3.0
-      }
-    ]
-  }
+  "components": {}
 }

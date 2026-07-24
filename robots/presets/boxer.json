@@ -1,0 +1,152 @@
+{
+  "name": "Tyson-01",
+  "display_name": "Tyson-01",
+  "description": "Aggressive Striker Boxer built for heavy close-range punches.",
+  "color": "#ef4444",
+  "segments": [
+    {
+      "name": "head",
+      "shape_type": "circle",
+      "radius": 0.25,
+      "mass": 0.5,
+      "moment_of_inertia": 0.02,
+      "relative_position": [0.0, 1.0]
+    },
+    {
+      "name": "torso",
+      "shape_type": "polygon",
+      "mass": 2.5,
+      "moment_of_inertia": 0.2,
+      "relative_position": [0.0, 0.3],
+      "vertices": [
+        [-0.2, -0.4],
+        [0.2, -0.4],
+        [0.2, 0.4],
+        [-0.2, 0.4]
+      ]
+    },
+    {
+      "name": "left_arm",
+      "shape_type": "polygon",
+      "mass": 0.4,
+      "moment_of_inertia": 0.03,
+      "relative_position": [-0.5, 0.4],
+      "vertices": [
+        [-0.3, -0.08],
+        [0.1, -0.08],
+        [0.1, 0.08],
+        [-0.3, 0.08]
+      ]
+    },
+    {
+      "name": "right_arm",
+      "shape_type": "polygon",
+      "mass": 0.4,
+      "moment_of_inertia": 0.03,
+      "relative_position": [0.5, 0.4],
+      "vertices": [
+        [-0.1, -0.08],
+        [0.3, -0.08],
+        [0.3, 0.08],
+        [-0.1, 0.08]
+      ]
+    },
+    {
+      "name": "left_leg",
+      "shape_type": "polygon",
+      "mass": 0.6,
+      "moment_of_inertia": 0.05,
+      "relative_position": [-0.15, -0.4],
+      "vertices": [
+        [-0.08, -0.4],
+        [0.08, -0.4],
+        [0.08, 0.2],
+        [-0.08, 0.2]
+      ]
+    },
+    {
+      "name": "right_leg",
+      "shape_type": "polygon",
+      "mass": 0.6,
+      "moment_of_inertia": 0.05,
+      "relative_position": [0.15, -0.4],
+      "vertices": [
+        [-0.08, -0.4],
+        [0.08, -0.4],
+        [0.08, 0.2],
+        [-0.08, 0.2]
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "name": "neck",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "head",
+      "anchor_parent": [0.0, 0.4],
+      "anchor_child": [0.0, -0.25],
+      "max_torque": 15.0
+    },
+    {
+      "name": "left_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_arm",
+      "anchor_parent": [-0.2, 0.3],
+      "anchor_child": [0.1, 0.0],
+      "max_torque": 60.0
+    },
+    {
+      "name": "right_shoulder",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_arm",
+      "anchor_parent": [0.2, 0.3],
+      "anchor_child": [-0.1, 0.0],
+      "max_torque": 60.0
+    },
+    {
+      "name": "left_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "left_leg",
+      "anchor_parent": [-0.15, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 50.0
+    },
+    {
+      "name": "right_hip",
+      "joint_type": "revolute",
+      "parent_segment": "torso",
+      "child_segment": "right_leg",
+      "anchor_parent": [0.15, -0.4],
+      "anchor_child": [0.0, 0.2],
+      "max_torque": 50.0
+    }
+  ],
+  "components": {
+    "left_arm": [
+      {
+        "name": "Boxing Glove Left",
+        "component_type": "weapon",
+        "weapon_type": "HAMMER",
+        "mass": 0.3,
+        "durability": 120.0,
+        "energy_consumption": 0.0,
+        "damage_multiplier": 2.5
+      }
+    ],
+    "right_arm": [
+      {
+        "name": "Boxing Glove Right",
+        "component_type": "weapon",
+        "weapon_type": "HAMMER",
+        "mass": 0.3,
+        "durability": 120.0,
+        "energy_consumption": 0.0,
+        "damage_multiplier": 2.5
+      }
+    ]
+  }
+}

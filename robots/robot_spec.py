@@ -10,7 +10,7 @@ from robots.components import ComponentSpec, ComponentType
 
 
 class RobotSpec(CreatureSpec):
-    """Robot specification extending CreatureSpec with modular physical components."""
+    """Robot specification extending CreatureSpec with modular physical components and UI metadata."""
 
     def __init__(
         self,
@@ -18,9 +18,15 @@ class RobotSpec(CreatureSpec):
         segments: list[Any],
         joints: list[Any],
         components: dict[str, list[ComponentSpec]] | None = None,
+        display_name: str | None = None,
+        description: str | None = None,
+        color: str | None = None,
     ) -> None:
         super().__init__(name, segments, joints)
         self.components = components if components is not None else {}
+        self.display_name = display_name if display_name is not None else name
+        self.description = description if description is not None else ""
+        self.color = color if color is not None else "#3b82f6"
 
     @property
     def total_mass(self) -> float:
@@ -55,6 +61,9 @@ class RobotSpec(CreatureSpec):
     def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
+            "display_name": self.display_name,
+            "description": self.description,
+            "color": self.color,
             "segments": [asdict(s) for s in self.segments],
             "joints": [asdict(j) for j in self.joints],
             "components": {
@@ -76,6 +85,9 @@ class RobotSpec(CreatureSpec):
             segments=creature_spec.segments,
             joints=creature_spec.joints,
             components=components,
+            display_name=data.get("display_name", creature_spec.name),
+            description=data.get("description", ""),
+            color=data.get("color", "#3b82f6"),
         )
 
     @classmethod
@@ -100,6 +112,11 @@ class Robot(Creature):
         # Initialize energy pool
         self.max_energy = spec.total_energy_capacity
         self.current_energy = self.max_energy
+
+    @property
+    def total_mass(self) -> float:
+        """Sum of total mass across all robot physics bodies."""
+        return sum(float(b.mass) for b in self.bodies.values())
 
     @property
     def total_durability(self) -> float:

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoboForge Arena — Fighting Robotics Laboratory</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="layout-container">
+        <!-- Left Sidebar Navigation & Roster -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <label class="section-label">Mode</label>
+                <div class="mode-nav">
+                    <button class="nav-btn active" data-mode="playground">
+                        <span class="nav-icon">⚙</span> Playground
+                    </button>
+                    <button class="nav-btn" data-mode="gym">
+                        <span class="nav-icon">📊</span> Gym
+                    </button>
+                    <button class="nav-btn" data-mode="competitive">
+                        <span class="nav-icon">🔥</span> Competitive
+                    </button>
+                </div>
+            </div>
+
+            <!-- Left Controls according to active mode -->
+            <div id="left-controls-playground" class="left-panel active">
+                <div class="sidebar-section">
+                    <label class="section-label">Spawn Objects</label>
+                    <button id="btn-spawn-box" class="sidebar-btn">Spawn Dynamic Box</button>
+                    <button id="btn-spawn-robot-a" class="sidebar-btn primary">Spawn Boxer (Tyson-01)</button>
+                    <button id="btn-spawn-robot-b" class="sidebar-btn accent">Spawn Grappler</button>
+                </div>
+                <div class="sidebar-section">
+                    <label class="section-label">Environment</label>
+                    <label for="gravity-slider" class="sub-label">Gravity Y: <span id="gravity-val">-9.8</span> m/s²</label>
+                    <input type="range" id="gravity-slider" min="-30" max="10" step="0.5" value="-9.8">
+                </div>
+            </div>
+
+            <div id="left-controls-gym" class="left-panel">
+                <div class="sidebar-section">
+                    <label class="section-label">Algorithm</label>
+                    <select id="gym-algo-select" class="sidebar-select">
+                        <option value="ga">Genetic algorithm</option>
+                        <option value="ppo">PPO Reinforcement Learning</option>
+                    </select>
+                </div>
+                <div class="sidebar-section">
+                    <label class="section-label">Describe how this fighter should train</label>
+                    <textarea id="prompt-input" class="sidebar-textarea" placeholder="e.g. aggressive boxer, like Mike Tyson"></textarea>
+                    <div id="prompt-interpreted" class="interpreted-pill">Interpreted: aggression 0.9 · mobility 0.4 · caution 0.2</div>
+                </div>
+                <div class="sidebar-section">
+                    <button id="btn-train-start" class="sidebar-btn primary">▷ Start training</button>
+                    <button id="btn-gym-promote" class="sidebar-btn accent" style="margin-top: 8px;">Promote Best to Roster</button>
+                </div>
+            </div>
+
+            <div id="left-controls-competitive" class="left-panel">
+                <div class="sidebar-section">
+                    <label class="section-label">Your roster</label>
+                    <div id="roster-list" class="roster-list">
+                        <div class="roster-item active-red" data-id="boxer">
+                            <span>Tyson-01</span>
+                            <span class="check-icon">✓</span>
+                        </div>
+                        <div class="roster-item active-blue" data-id="grappler">
+                            <span>Grappler-gen34</span>
+                            <span class="check-icon">✓</span>
+                        </div>
+                        <div class="roster-item" data-id="lightweight">
+                            <span>Boxer-ppo-v2</span>
+                        </div>
+                        <div class="roster-item" data-id="tank">
+                            <span>Heavy Tank</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-section">
+                    <button id="btn-start-match" class="sidebar-btn primary">Start 1v1 Battle</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Competitive Header (Shown in Competitive Mode) -->
+            <div id="competitive-header" class="match-header hidden">
+                <div class="fighter-summary red-corner">
+                    <span id="name-a" class="fighter-name">Tyson-01</span>
+                    <span class="fighter-sub">trained: aggressive boxer</span>
+                    <div class="hp-bar-bg">
+                        <div id="hp-bar-a" class="hp-bar-fill red" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="fighter-summary blue-corner">
+                    <span id="name-b" class="fighter-name">Grappler-gen34</span>
+                    <span class="fighter-sub">evolved: generation 34, best genome</span>
+                    <div class="hp-bar-bg">
+                        <div id="hp-bar-b" class="hp-bar-fill blue" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gym Stats Bar (Shown in Gym Mode) -->
+            <div id="gym-stats-header" class="gym-stats-header hidden">
+                <div class="stat-card">
+                    <span class="stat-label">Generation</span>
+                    <span id="gym-gen-val" class="stat-val">34</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Best fitness</span>
+                    <span id="gym-best-val" class="stat-val green">521.3</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Mean fitness</span>
+                    <span id="gym-mean-val" class="stat-val">318.4</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Population</span>
+                    <span id="gym-pop-val" class="stat-val">16</span>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="canvas-card">
+                <div class="top-status-bar">
+                    <span id="connection-dot" class="dot connected"></span>
+                    <span id="connection-status">Connected (60 Hz)</span>
+                    <div class="canvas-actions">
+                        <button id="btn-pause" class="mini-btn">Pause</button>
+                        <button id="btn-reset" class="mini-btn danger">Reset</button>
+                    </div>
+                </div>
+
+                <div id="playground-viewport" class="viewport-box">
+                    <canvas id="sim-canvas" width="860" height="420"></canvas>
+                    <div id="match-footer-info" class="match-footer-info hidden">
+                        local 1v1 · round 2 · <span id="step-counter-val">step 1840</span>
+                    </div>
+                </div>
+
+                <!-- Gym Population & Graph Viewport -->
+                <div id="gym-viewport" class="viewport-box hidden">
+                    <div class="gym-section-title">Live population — this generation</div>
+                    <div id="gym-grid-cards" class="gym-cards-row">
+                        <!-- Populated dynamically by app.js -->
+                    </div>
+                    <div class="gym-chart-container">
+                        <canvas id="gym-chart-canvas" width="840" height="160"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Event Log & Commentary Row (Competitive Mode) -->
+            <div id="competitive-bottom-row" class="bottom-cards-row hidden">
+                <div class="card-box event-log-box">
+                    <div class="card-title">Event log</div>
+                    <div id="event-log-list" class="event-list">
+                        <div class="log-entry"><span class="red-text">Tyson-01</span> landed a hit -12 hp</div>
+                        <div class="log-entry"><span class="blue-text">Grappler</span> closed distance</div>
+                    </div>
+                </div>
+                <div class="card-box commentary-box">
+                    <div class="card-title">
+                        <span>✨ AI commentary</span>
+                        <span class="disclaimer-pill">interpretation, not the robot's actual thoughts</span>
+                    </div>
+                    <div id="commentary-text" class="commentary-quote">
+                        "Tyson-01 is pressing the advantage after that last hit — Grappler looks to be circling for an opening rather than trading blows."
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -29,6 +29,7 @@ class SandboxMode:
         if not self.headless:
             self.renderer = Renderer(width=800, height=600, caption="RoboForge Arena — Sandbox Mode")
 
+        self.robots: list[Any] = []
         self.world: World = World(gravity=self.gravity_modes[0])
         self.setup_terrain()
 
@@ -57,6 +58,7 @@ class SandboxMode:
 
     def reset_world(self) -> None:
         """Clear all bodies and rebuild world."""
+        self.robots = []
         self.world = World(gravity=self.gravity_modes[self.gravity_idx])
         self.setup_terrain()
 
@@ -91,6 +93,7 @@ class SandboxMode:
         """Spawn robot preset into World."""
         spec = RobotSpec.from_json(spec_path)
         robot = build_robot(spec, self.world, base_position=position)
+        self.robots.append(robot)
         return robot
 
     def step(self) -> None:

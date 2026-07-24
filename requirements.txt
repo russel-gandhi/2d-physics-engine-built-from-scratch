@@ -5,6 +5,10 @@ numpy
 pygame
 gymnasium
 stable-baselines3
-tensorboard
 matplotlib
 pytest
+fastapi
+uvicorn[standard]
+websockets
+google-generativeai
+python-dotenv
