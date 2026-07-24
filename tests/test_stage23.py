@@ -17,8 +17,10 @@ def test_match_recorder_saves_and_loads_replay(tmp_path):
         max_steps=20,
     )
 
+    na = len(arena.robot_a.motorized_joints)
+    nb = len(arena.robot_b.motorized_joints)
     for _ in range(10):
-        arena.step([0.0], [0.0])
+        arena.step([0.0] * na, [0.0] * nb)
         recorder.record_step(arena, damage_events=[])
 
     recorder.end_match(arena.winner, arena.win_reason)
@@ -45,8 +47,10 @@ def test_replay_player_reconstructs_and_renders(tmp_path):
         max_steps=5,
     )
 
+    na = len(arena.robot_a.motorized_joints)
+    nb = len(arena.robot_b.motorized_joints)
     for _ in range(5):
-        arena.step([0.0], [0.0])
+        arena.step([0.0] * na, [0.0] * nb)
         recorder.record_step(arena, damage_events=[])
 
     recorder.end_match(arena.winner, arena.win_reason)

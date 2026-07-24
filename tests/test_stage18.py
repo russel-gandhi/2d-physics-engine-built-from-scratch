@@ -87,13 +87,13 @@ def test_weapon_limb_swing_simulation_damage():
     target1 = build_robot(unarmed_spec, w1, base_position=(0.3, 2.0))
 
     # Swing leg at high torque
-    swinger_unarmed.apply_actions([1.0])
+    swinger_unarmed.apply_actions([1.0] * len(swinger_unarmed.motorized_joints))
 
     w2 = World()
     swinger_armed = build_robot(weapon_spec, w2, base_position=(-0.3, 2.0))
     target2 = build_robot(unarmed_spec, w2, base_position=(0.3, 2.0))
 
-    swinger_armed.apply_actions([1.0])
+    swinger_armed.apply_actions([1.0] * len(swinger_armed.motorized_joints))
 
     impulse = 40.0
     threshold = 10.0

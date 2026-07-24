@@ -1,1 +1,12 @@
-{"name": "Test Champion", "promoted": true}
+{
+  "name": "Test Champion",
+  "safe_name": "test_champion",
+  "preset": "robots/presets/boxer.json",
+  "artifact": "models/combat_ga_best.npy",
+  "stats": {
+    "algo": "ga_combat",
+    "best_reward": 0.0,
+    "mean_reward": 0.0,
+    "generation": 0
+  }
+}

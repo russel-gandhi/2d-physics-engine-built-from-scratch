@@ -105,9 +105,16 @@ class Robot(Creature):
         self.robot_spec = spec
 
         # Initialize durability (health) per segment
+        # If a segment has explicit components, sum their durability.
+        # If not, give it a default baseline durability (100.0) so robots always have HP.
         self.segment_health: dict[str, float] = {}
-        for seg_id, comp_list in spec.components.items():
-            self.segment_health[seg_id] = sum(c.durability for c in comp_list)
+        segment_names = [seg.name for seg in spec.segments]
+        for seg_name in segment_names:
+            comp_list = spec.components.get(seg_name, [])
+            if comp_list:
+                self.segment_health[seg_name] = sum(c.durability for c in comp_list)
+            else:
+                self.segment_health[seg_name] = 100.0  # default baseline durability
 
         # Initialize energy pool
         self.max_energy = spec.total_energy_capacity

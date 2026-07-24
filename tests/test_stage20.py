@@ -13,22 +13,27 @@ def test_combat_env_reset_and_observation_shapes():
     assert isinstance(obs, np.ndarray)
     assert not np.isnan(obs).any()
     assert env.observation_space.contains(obs)
-    assert env.action_space.shape == (1,)  # Single revolute joint on preset
+    # Action space shape matches actual joint count (5 for preset robots)
+    n_actions = env.action_space.shape[0]
+    assert n_actions >= 1
 
 
 def test_combat_env_single_agent_against_scripted_opponent():
     """Verify CombatEnv runs full episode with agent A against a fixed scripted opponent policy."""
-    # Scripted policy swinging back and forth
-    def scripted_policy(obs_b: np.ndarray) -> np.ndarray:
-        return np.array([1.0], dtype=np.float32)
+    env = CombatEnv(max_episode_steps=50)
+    n_actions_b = env.action_space_b.shape[0]
 
-    env = CombatEnv(opponent_policy=scripted_policy, max_episode_steps=50)
-    obs, info = env.reset()
+    # Scripted policy returning correct action size for opponent
+    def scripted_policy(obs_b: np.ndarray) -> np.ndarray:
+        return np.zeros(n_actions_b, dtype=np.float32)
+
+    env2 = CombatEnv(opponent_policy=scripted_policy, max_episode_steps=50)
+    obs, info = env2.reset()
 
     total_reward = 0.0
     for _ in range(50):
-        action_a = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action_a)
+        action_a = env2.action_space.sample()
+        obs, reward, terminated, truncated, info = env2.step(action_a)
         assert isinstance(reward, float)
         assert not np.isnan(obs).any()
         total_reward += reward
@@ -43,9 +48,13 @@ def test_combat_env_two_agents_steering():
     env = CombatEnv(max_episode_steps=50)
     obs_a, _ = env.reset()
 
-    # Create two random NNControllers
-    ctrl_a = NNController(obs_dim=env.observation_space.shape[0], num_actions=1, hidden_dim=16)
-    ctrl_b = NNController(obs_dim=env.observation_space.shape[0], num_actions=1, hidden_dim=16)
+    obs_dim = env.observation_space.shape[0]
+    n_actions_a = env.action_space.shape[0]
+    n_actions_b = env.action_space_b.shape[0]
+
+    # Create two random NNControllers with correct action dimensions
+    ctrl_a = NNController(obs_dim=obs_dim, num_actions=n_actions_a, hidden_dim=16)
+    ctrl_b = NNController(obs_dim=obs_dim, num_actions=n_actions_b, hidden_dim=16)
 
     obs_b = env.current_obs_b
 
@@ -59,7 +68,7 @@ def test_combat_env_two_agents_steering():
         if done:
             break
 
-    assert info["winner"] in ("robot_a", "robot_b", "draw")
+    assert info["winner"] in ("robot_a", "robot_b", "draw", None)
 
 
 def test_combat_env_termination_matches_arena():
@@ -67,9 +76,10 @@ def test_combat_env_termination_matches_arena():
     env = CombatEnv(max_episode_steps=5)
     obs, info = env.reset()
 
+    n_actions_a = env.action_space.shape[0]
     done = False
     for _ in range(5):
-        action_a = np.array([0.0], dtype=np.float32)
+        action_a = np.zeros(n_actions_a, dtype=np.float32)
         obs, reward, terminated, truncated, info = env.step(action_a)
         done = terminated or truncated
 

@@ -26,13 +26,20 @@ class PolicyPoolOpponent:
         self.current_model: PPO | None = None
         self.reload_opponent()
 
-    def reload_opponent(self) -> None:
+    def reload_opponent(self, expected_obs_dim: int | None = None) -> None:
         """Sample random checkpoint from pool or use heuristic if pool empty."""
         checkpoints = glob.glob(os.path.join(self.checkpoint_dir, "*.zip"))
         if checkpoints:
             chosen = random.choice(checkpoints)
             try:
-                self.current_model = PPO.load(chosen)
+                model = PPO.load(chosen)
+                # Validate obs shape matches current env — skip stale checkpoints
+                if expected_obs_dim is not None:
+                    loaded_obs_dim = model.observation_space.shape[0]
+                    if loaded_obs_dim != expected_obs_dim:
+                        self.current_model = None
+                        return
+                self.current_model = model
                 return
             except Exception:
                 pass
@@ -43,8 +50,9 @@ class PolicyPoolOpponent:
         if self.current_model is not None:
             action, _ = self.current_model.predict(obs_b, deterministic=True)
             return action
-        # Heuristic default: advance and swing motor
-        return np.array([1.0], dtype=np.float32)
+        # Heuristic default: swing all joints forward
+        n = max(1, len(obs_b) // 4)  # rough estimate of num actions
+        return np.ones(n, dtype=np.float32)
 
 
 def train_combat_rl(
@@ -103,7 +111,7 @@ def train_combat_rl(
             # Save checkpoint to self-play pool
             ckpt_path = os.path.join(checkpoint_dir, f"combat_ppo_{trained_steps}.zip")
             model.save(ckpt_path)
-            pool_opponent.reload_opponent()
+            pool_opponent.reload_opponent(expected_obs_dim=raw_env.observation_space.shape[0])
             print(f"  Completed {trained_steps}/{total_timesteps} timesteps. Checkpoint saved to pool.")
 
         model.save(model_save_path)

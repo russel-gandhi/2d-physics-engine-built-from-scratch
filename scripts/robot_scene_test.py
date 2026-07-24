@@ -33,8 +33,8 @@ def run_robot_scene_test(steps: int = 120, verbose: bool = True) -> dict:
 
     # Step initial phase to measure acceleration (before chaotic ground contact)
     for step_idx in range(initial_steps):
-        light_bot.apply_actions([1.0])
-        heavy_bot.apply_actions([1.0])
+        light_bot.apply_actions([1.0] * len(light_bot.motorized_joints))
+        heavy_bot.apply_actions([1.0] * len(heavy_bot.motorized_joints))
         world.step(dt)
 
     light_init_accel = float(light_bot.main_body.velocity.length() / (initial_steps * dt))
@@ -42,8 +42,8 @@ def run_robot_scene_test(steps: int = 120, verbose: bool = True) -> dict:
 
     # Complete remaining steps
     for _ in range(steps - initial_steps):
-        light_bot.apply_actions([1.0])
-        heavy_bot.apply_actions([1.0])
+        light_bot.apply_actions([1.0] * len(light_bot.motorized_joints))
+        heavy_bot.apply_actions([1.0] * len(heavy_bot.motorized_joints))
         world.step(dt)
 
     light_speed = float(light_bot.main_body.velocity.length())

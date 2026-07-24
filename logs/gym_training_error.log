@@ -1,0 +1,8 @@
+=== Gym Training Crash ===
+Traceback (most recent call last):
+  File "C:\Users\Kashish Gandhi\Desktop\2D_physics_engine\web\server.py", line 294, in _run_combat_gym_training
+    aggression = float(weights.get("aggression", 0.5))
+                       ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+

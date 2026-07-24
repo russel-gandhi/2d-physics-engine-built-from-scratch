@@ -1,1 +1,36 @@
-[]
+[
+  {
+    "id": "db1ab4bc",
+    "name": "Aggressive Alpha",
+    "preset_name": "robots/presets/boxer.json",
+    "algo": "ga",
+    "artifact_path": "models/roster/fighter_a_test.npy",
+    "stats": {
+      "best_reward": 0.0,
+      "trained_amount": 0
+    }
+  },
+  {
+    "id": "00170f37",
+    "name": "Defensive Beta",
+    "preset_name": "robots/presets/boxer.json",
+    "algo": "ga",
+    "artifact_path": "models/roster/fighter_b_test.npy",
+    "stats": {
+      "best_reward": 0.0,
+      "trained_amount": 0
+    }
+  },
+  {
+    "id": "524abbfc",
+    "name": "Aggressive Brawler Champ",
+    "preset_name": "robots/presets/boxer.json",
+    "algo": "ga",
+    "artifact_path": "models/roster/ga_aggression_champ.npy",
+    "stats": {
+      "best_reward": 19.0,
+      "generations": 10,
+      "time_s": 25.86
+    }
+  }
+]

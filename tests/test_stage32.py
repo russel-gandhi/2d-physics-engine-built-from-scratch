@@ -42,15 +42,15 @@ def test_archetype_tradeoff_physical_behavior():
     assert robot_grappler.total_mass > robot_boxer.total_mass
 
     # 2. Verify Initial Angular Acceleration Tradeoff (F = ma) under torque
-    robot_boxer.apply_actions([1.0])
+    robot_boxer.apply_actions([1.0] * len(robot_boxer.motorized_joints))
     world_b.step(1.0 / 60.0)
 
-    robot_grappler.apply_actions([1.0])
+    robot_grappler.apply_actions([1.0] * len(robot_grappler.motorized_joints))
     world_g.step(1.0 / 60.0)
 
     # Higher torque / lower inertia on Boxer produces higher initial leg angular velocity
-    boxer_leg_w = abs(robot_boxer.bodies["leg"].angular_velocity)
-    grappler_leg_w = abs(robot_grappler.bodies["leg"].angular_velocity)
+    boxer_leg_w = abs(robot_boxer.bodies["left_leg"].angular_velocity)
+    grappler_leg_w = abs(robot_grappler.bodies["left_leg"].angular_velocity)
 
     assert boxer_leg_w > grappler_leg_w
 

@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let socket = null;
     let currentMode = 'playground';
     let isPaused = false;
-    let gymHistory = [10.0, 15.0, 25.0, 40.0, 65.0, 90.0, 130.0, 180.0, 240.0, 310.0, 390.0, 460.0, 521.3];
+    let gymFitnessHistory = [];  // populated live from state.gym.history via WebSocket
 
     // WebSocket Connection
     function connectWebSocket() {
@@ -65,12 +65,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     const bestVal = document.getElementById('gym-best-val');
                     const meanVal = document.getElementById('gym-mean-val');
 
-                    if (genVal && state.gym.generation) genVal.textContent = state.gym.generation;
-                    if (bestVal && state.gym.best_reward) bestVal.textContent = state.gym.best_reward.toFixed(1);
-                    if (meanVal && state.gym.mean_reward) meanVal.textContent = state.gym.mean_reward.toFixed(1);
+                    if (genVal && state.gym.generation !== undefined) genVal.textContent = state.gym.generation;
+                    if (bestVal && state.gym.best_reward !== undefined) bestVal.textContent = state.gym.best_reward.toFixed(1);
+                    if (meanVal && state.gym.mean_reward !== undefined) meanVal.textContent = state.gym.mean_reward.toFixed(1);
+
+                    // Update live fitness history from real server data
+                    if (state.gym.history && state.gym.history.length > 0) {
+                        gymFitnessHistory = state.gym.history;
+                        drawGymChart();
+                    }
 
                     if (state.gym.grid) {
                         renderGymPopulationCards(state.gym.grid);
+                    }
+
+                    // Show training complete banner
+                    if (state.gym.training_complete) {
+                        const banner = document.getElementById('gym-complete-banner');
+                        if (banner) banner.classList.remove('hidden');
                     }
                 }
             } catch (err) {
@@ -116,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         drawGymChart();
     }
 
-    // Draw Fitness Curve Sparkline Graph
+    // Draw Fitness Curve Sparkline Graph from live server data
     function drawGymChart() {
         const canvas = document.getElementById('gym-chart-canvas');
         if (!canvas) return;
@@ -126,13 +138,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, w, h);
 
-        const data = gymHistory;
-        const maxVal = Math.max(...data, 600);
+        const data = gymFitnessHistory;
+        if (data.length < 2) {
+            // Not enough data yet — show placeholder text
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Waiting for training data...', w / 2, h / 2);
+            return;
+        }
 
+        const maxVal = Math.max(...data, 1);
+        const minVal = Math.min(...data, 0);
+        const range = maxVal - minVal || 1;
+
+        // Best fitness line (blue)
         ctx.beginPath();
         data.forEach((val, i) => {
             const x = (i / (data.length - 1)) * w;
-            const y = h - (val / maxVal) * (h - 20) - 10;
+            const y = h - ((val - minVal) / range) * (h - 20) - 10;
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         });
@@ -140,19 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Draw mean fitness dotted line
-        ctx.beginPath();
-        ctx.setLineDash([4, 4]);
+        // Mark each generation's best with a dot
         data.forEach((val, i) => {
             const x = (i / (data.length - 1)) * w;
-            const y = h - ((val * 0.6) / maxVal) * (h - 20) - 10;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+            const y = h - ((val - minVal) / range) * (h - 20) - 10;
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#60a5fa';
+            ctx.fill();
         });
-        ctx.strokeStyle = '#9ca3af';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.setLineDash([]);
     }
 
     // Mode Navigation Switcher

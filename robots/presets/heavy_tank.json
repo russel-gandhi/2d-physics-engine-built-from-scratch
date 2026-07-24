@@ -125,5 +125,12 @@
       "max_torque": 80.0
     }
   ],
-  "components": {}
+  "components": {
+    "head": [{"name": "Reinforced Hull", "component_type": "armor", "mass": 2.0, "durability": 250.0, "energy_consumption": 0.0, "properties": {}}],
+    "torso": [{"name": "Core Armor Chassis", "component_type": "chassis", "mass": 5.0, "durability": 500.0, "energy_consumption": 0.0, "properties": {}}],
+    "left_arm": [{"name": "Armored Limb", "component_type": "armor", "mass": 1.5, "durability": 200.0, "energy_consumption": 0.0, "properties": {}}],
+    "right_arm": [{"name": "Armored Limb", "component_type": "armor", "mass": 1.5, "durability": 200.0, "energy_consumption": 0.0, "properties": {}}],
+    "left_leg": [{"name": "Tank Leg", "component_type": "armor", "mass": 2.0, "durability": 250.0, "energy_consumption": 0.0, "properties": {}}],
+    "right_leg": [{"name": "Tank Leg", "component_type": "armor", "mass": 2.0, "durability": 250.0, "energy_consumption": 0.0, "properties": {}}]
+  }
 }

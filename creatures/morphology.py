@@ -89,14 +89,29 @@ class Creature:
         return motorized
 
     def apply_actions(self, actions: list[float] | np.ndarray) -> None:
-        """Apply normalized motor torque actions in [-1.0, 1.0] scaled by max_torque."""
+        """Apply normalized motor torque actions in [-1.0, 1.0] scaled by max_torque.
+        
+        If a joint's child segment has zero health (destroyed), that joint motor is disabled.
+        """
         motorized = self.motorized_joints
         if len(actions) != len(motorized):
             raise ValueError(f"Expected {len(motorized)} actions, got {len(actions)}")
 
-        for i, (_, joint, max_torque) in enumerate(motorized):
+        for i, (joint_name, joint, max_torque) in enumerate(motorized):
             clamped_action = float(np.clip(actions[i], -1.0, 1.0))
-            joint.motor_torque = clamped_action * max_torque
+
+            # Disable joint if the child segment it actuates has zero remaining health
+            child_seg = None
+            for j_spec in self.spec.joints:
+                if j_spec.name == joint_name:
+                    child_seg = getattr(j_spec, "child_segment", None)
+                    break
+
+            seg_health = getattr(self, "segment_health", {})
+            if child_seg and seg_health.get(child_seg, 1.0) <= 0.0:
+                joint.motor_torque = 0.0
+            else:
+                joint.motor_torque = clamped_action * max_torque
 
 
 def build_creature(

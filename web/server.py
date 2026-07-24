@@ -3,8 +3,12 @@ from __future__ import annotations
 import asyncio
 import math
 import os
+import threading
+import time
+import random
 import numpy as np
 from typing import Any
+from concurrent.futures import ProcessPoolExecutor
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -12,9 +16,62 @@ from pydantic import BaseModel
 from sandbox.sandbox_mode import SandboxMode
 from combat.arena import Arena
 from web.state_encoder import encode_state
+from combat.combat_env import CombatEnv
+from evolution.nn_controller import NNController
+from evolution.ga import tournament_selection, crossover, mutate
+from web.fighter_roster import save_fighter, list_fighters, get_fighter, delete_fighter
+from web.prompt_translator import translate_training_prompt
 
 
 app = FastAPI(title="RoboForge Arena — Web Dashboard Server")
+
+
+def _evaluate_single_combat_match(
+    args: tuple[np.ndarray, np.ndarray, str, str, dict[str, float], int]
+) -> float:
+    """Evaluate one combat match between two genomes independently in a worker process."""
+    genome_a, genome_b, robot_a_spec, robot_b_spec, weights, max_steps = args
+    env = CombatEnv(
+        robot_a_spec=robot_a_spec,
+        robot_b_spec=robot_b_spec,
+        max_episode_steps=max_steps,
+    )
+    obs_a, _ = env.reset()
+    obs_b = env.current_obs_b
+
+    obs_dim_a = env.observation_space.shape[0]
+    num_actions_a = env.action_space.shape[0]
+    obs_dim_b = len(env.current_obs_b)
+    num_actions_b = env.action_space_b.shape[0]
+
+    ctrl_a = NNController(obs_dim=obs_dim_a, num_actions=num_actions_a, hidden_dim=16)
+    ctrl_b = NNController(obs_dim=obs_dim_b, num_actions=num_actions_b, hidden_dim=16)
+
+    ctrl_a.set_genome(genome_a)
+    ctrl_b.set_genome(genome_b)
+
+    aggression = float(weights.get("aggression", 0.5))
+    caution = float(weights.get("caution", 0.5))
+    mobility = float(weights.get("mobility", 0.5))
+
+    total_reward = 0.0
+    done = False
+
+    while not done:
+        action_a = ctrl_a.act(obs_a)
+        action_b = ctrl_b.act(obs_b)
+        obs_a, obs_b, rew_a, rew_b, done, info = env.step_two_agents(action_a, action_b)
+
+        shaped_reward = (
+            rew_a * (1.0 + aggression)
+            + info.get("distance_closed", 0.0) * mobility
+            - info.get("damage_received", 0.0) * caution
+        )
+        total_reward += shaped_reward
+
+    env.close()
+    return float(total_reward)
+
 
 # Global Session State Owner
 class SessionState:
@@ -23,6 +80,8 @@ class SessionState:
         self.paused: bool = False
         self.sandbox: SandboxMode = SandboxMode(headless=True)
         self.arena: Arena | None = None
+        self.ctrl_a: Any = None
+        self.ctrl_b: Any = None
 
     def get_active_object(self) -> Any:
         if self.mode == "playground":
@@ -30,6 +89,60 @@ class SessionState:
         elif self.mode == "competitive" and self.arena is not None:
             return self.arena
         return self.sandbox
+
+    def load_controllers_for_competitive(
+        self, fighter_a_id: str | None = None, fighter_b_id: str | None = None
+    ) -> None:
+        if self.arena is None:
+            return
+        self.ctrl_a = self._load_single_controller(fighter_a_id, is_robot_a=True)
+        self.ctrl_b = self._load_single_controller(fighter_b_id, is_robot_a=False)
+
+    def _load_single_controller(self, fighter_id: str | None, is_robot_a: bool) -> Any:
+        if self.arena is None:
+            return None
+        robot = self.arena.robot_a if is_robot_a else self.arena.robot_b
+        opponent = self.arena.robot_b if is_robot_a else self.arena.robot_a
+        obs = self.arena.get_observation(robot, opponent)
+        obs_dim = obs.shape[0]
+        num_actions = len(robot.spec.joints)
+
+        ctrl = NNController(obs_dim=obs_dim, num_actions=num_actions, hidden_dim=16)
+
+        fighter_entry = get_fighter(fighter_id) if fighter_id else None
+        artifact_path = fighter_entry.get("artifact_path") if fighter_entry else None
+
+        if not artifact_path or not os.path.exists(artifact_path):
+            if os.path.exists("models/combat_ga_best.npy"):
+                artifact_path = "models/combat_ga_best.npy"
+
+        if artifact_path and os.path.exists(artifact_path):
+            if artifact_path.endswith(".npy"):
+                try:
+                    genome = np.load(artifact_path)
+                    if genome.size == ctrl.total_weights:
+                        ctrl.set_genome(genome)
+                except Exception:
+                    pass
+                return ctrl
+            elif artifact_path.endswith(".zip"):
+                try:
+                    from stable_baselines3 import PPO
+                    ppo_model = PPO.load(artifact_path)
+
+                    class PPOWrapper:
+                        def __init__(self, model: Any):
+                            self.model = model
+
+                        def act(self, observation: np.ndarray) -> np.ndarray:
+                            action, _ = self.model.predict(observation, deterministic=True)
+                            return action
+
+                    return PPOWrapper(ppo_model)
+                except Exception:
+                    pass
+
+        return ctrl
 
     def step(self) -> None:
         if not self.paused:
@@ -41,44 +154,39 @@ class SessionState:
                     action = [float(np.sin(t * 2.0 + i + r_idx)) for i in range(num_j)]
                     robot.apply_actions(action)
             elif self.mode == "competitive" and self.arena is not None:
-                step_c = self.arena.current_step
-                t = step_c * 0.12
+                obs_a = self.arena.get_observation(self.arena.robot_a, self.arena.robot_b)
+                obs_b = self.arena.get_observation(self.arena.robot_b, self.arena.robot_a)
 
-                dx_a = self.arena.robot_b.main_body.position.x - self.arena.robot_a.main_body.position.x
-                dir_a = 1.0 if dx_a > 0 else -1.0
-
-                dx_b = self.arena.robot_a.main_body.position.x - self.arena.robot_b.main_body.position.x
-                dir_b = 1.0 if dx_b > 0 else -1.0
+                if self.ctrl_a is None:
+                    self.ctrl_a = self._load_single_controller(None, is_robot_a=True)
+                if self.ctrl_b is None:
+                    self.ctrl_b = self._load_single_controller(None, is_robot_a=False)
 
                 num_j_a = len(self.arena.robot_a.spec.joints)
                 num_j_b = len(self.arena.robot_b.spec.joints)
 
-                # Robot A (Red): neck, left_shoulder, right_shoulder, left_hip, right_hip
-                action_a = [
-                    float(np.sin(t * 1.5) * 0.2),
-                    float(np.sin(t * 4.0) * 0.9 + dir_a * 0.5),
-                    float(np.cos(t * 4.0) * 0.9 + dir_a * 0.5),
-                    float(np.sin(t * 3.0) * 0.8 + dir_a * 0.6),
-                    float(-np.sin(t * 3.0) * 0.8 + dir_a * 0.6),
-                ]
-                if len(action_a) < num_j_a:
-                    action_a.extend([0.0] * (num_j_a - len(action_a)))
-
-                # Robot B (Blue): neck, left_shoulder, right_shoulder, left_hip, right_hip
-                action_b = [
-                    float(np.cos(t * 1.5) * 0.2),
-                    float(-np.cos(t * 4.0) * 0.9 + dir_b * 0.5),
-                    float(-np.sin(t * 4.0) * 0.9 + dir_b * 0.5),
-                    float(np.cos(t * 3.0) * 0.8 + dir_b * 0.6),
-                    float(-np.cos(t * 3.0) * 0.8 + dir_b * 0.6),
-                ]
-                if len(action_b) < num_j_b:
-                    action_b.extend([0.0] * (num_j_b - len(action_b)))
+                action_a = self.ctrl_a.act(obs_a)
+                action_b = self.ctrl_b.act(obs_b)
 
                 self.arena.step(action_a[:num_j_a], action_b[:num_j_b])
 
 
 session = SessionState()
+
+
+def _simulation_loop() -> None:
+    """Background thread stepping physics simulation independently from the WebSocket loop."""
+    while True:
+        try:
+            if not session.paused:
+                session.step()
+        except Exception:
+            pass
+        time.sleep(1.0 / 60.0)
+
+
+_sim_thread = threading.Thread(target=_simulation_loop, daemon=True)
+_sim_thread.start()
 
 
 # Request Pydantic Models
@@ -111,13 +219,17 @@ def set_mode(req: ModeRequest) -> dict[str, Any]:
     # Clean teardown of previous mode
     if session.mode == "gym" and hasattr(session.sandbox, "gym_stats"):
         session.sandbox.gym_stats["stopped"] = True
+        session.paused = True  # Pause during teardown transition
+    else:
+        session.paused = False
+
     session.mode = req.mode
-    session.paused = False
     if req.mode == "competitive":
         session.arena = Arena(
             "robots/presets/boxer.json",
             "robots/presets/grappler.json",
         )
+        session.load_controllers_for_competitive()
     return {"status": "ok", "mode": session.mode}
 
 
@@ -134,6 +246,7 @@ def control_simulation(action: str) -> dict[str, Any]:
                 "robots/presets/lightweight_fighter.json",
                 "robots/presets/heavy_tank.json",
             )
+            session.load_controllers_for_competitive()
     elif action == "step":
         session.step()
     else:
@@ -146,9 +259,6 @@ def set_gravity(req: GravityRequest) -> dict[str, Any]:
     session.sandbox.world.gravity.x = req.gx
     session.sandbox.world.gravity.y = req.gy
     return {"status": "ok", "gravity": [req.gx, req.gy]}
-
-
-from web.prompt_translator import translate_training_prompt
 
 
 class TranslatePromptRequest(BaseModel):
@@ -169,36 +279,145 @@ def translate_gym_prompt(req: TranslatePromptRequest) -> dict[str, Any]:
     return {"status": "ok", "translation": res}
 
 
+def _run_combat_gym_training(
+    sandbox: Any,
+    weights: dict[str, float],
+    generations: int,
+    pop_size: int,
+    max_steps_per_match: int,
+) -> None:
+    """Background thread running real 1v1 CombatEnv GA evolution with parallel process evaluation."""
+    try:
+        robot_a_spec = "robots/presets/boxer.json"
+        robot_b_spec = "robots/presets/grappler.json"
+
+        aggression = float(weights.get("aggression", 0.5))
+        caution = float(weights.get("caution", 0.5))
+        mobility = float(weights.get("mobility", 0.5))
+
+        # Initialize CombatEnv once to get observation/action dimensions
+        env = CombatEnv(
+            robot_a_spec=robot_a_spec,
+            robot_b_spec=robot_b_spec,
+            max_episode_steps=max_steps_per_match,
+        )
+        obs_a, _ = env.reset()
+        obs_dim_a = env.observation_space.shape[0]
+        num_actions_a = env.action_space.shape[0]
+        env.close()
+
+        # Initialize random population of NNController genome vectors
+        dummy = NNController(obs_dim=obs_dim_a, num_actions=num_actions_a, hidden_dim=16)
+        genome_len = dummy.total_weights
+        genomes = [np.random.randn(genome_len).astype(np.float32) * 0.5 for _ in range(pop_size)]
+
+        fitness_history: list[float] = []
+        max_workers = min(pop_size, os.cpu_count() or 4)
+
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            for gen_idx in range(generations):
+                if sandbox.gym_stats.get("stopped"):
+                    break
+
+                task_args = []
+                for i in range(pop_size):
+                    opp_idx = random.choice([j for j in range(pop_size) if j != i])
+                    task_args.append((
+                        genomes[i],
+                        genomes[opp_idx],
+                        robot_a_spec,
+                        robot_b_spec,
+                        weights,
+                        max_steps_per_match,
+                    ))
+
+                futures = [executor.submit(_evaluate_single_combat_match, arg) for arg in task_args]
+                fitnesses = [f.result() for f in futures]
+
+                best_fitness = float(max(fitnesses))
+                mean_fitness = float(np.mean(fitnesses))
+                best_idx = int(np.argmax(fitnesses))
+                fitness_history.append(best_fitness)
+
+                grid = [
+                    {"id": i, "reward": round(fitnesses[i], 2), "is_best": (i == best_idx)}
+                    for i in range(pop_size)
+                ]
+
+                sandbox.gym_stats.update({
+                    "generation": gen_idx + 1,
+                    "best_reward": round(best_fitness, 2),
+                    "mean_reward": round(mean_fitness, 2),
+                    "grid": grid,
+                    "history": list(fitness_history),
+                })
+
+                # GA reproduction
+                elite = [genomes[best_idx].copy()]
+                parents = tournament_selection(genomes, fitnesses, num_select=pop_size - 1, tournament_size=3)
+                new_genomes = elite[:]
+                for k in range(0, len(parents) - 1, 2):
+                    child = crossover(parents[k], parents[k + 1])
+                    child = mutate(child, mutation_rate=0.08, mutation_strength=0.15)
+                    new_genomes.append(child)
+                while len(new_genomes) < pop_size:
+                    new_genomes.append(mutate(genomes[best_idx].copy(), mutation_rate=0.1, mutation_strength=0.2))
+                genomes = new_genomes[:pop_size]
+
+        os.makedirs("models", exist_ok=True)
+        best_genome = genomes[int(np.argmax(fitnesses))]
+        np.save("models/combat_ga_best.npy", best_genome)
+        sandbox.gym_stats["training_complete"] = True
+
+    except Exception as e:
+        import traceback
+        tb_str = traceback.format_exc()
+        os.makedirs("logs", exist_ok=True)
+        with open("logs/gym_training_error.log", "a", encoding="utf-8") as f:
+            f.write(f"=== Gym Training Crash ===\n{tb_str}\n\n")
+        if hasattr(sandbox, "gym_stats"):
+            sandbox.gym_stats["error"] = str(e)
+            sandbox.gym_stats["traceback"] = tb_str
+            sandbox.gym_stats["stopped"] = True
+
+
 @app.post("/api/gym/start")
 def start_gym_training(req: GymStartRequest) -> dict[str, Any]:
     os.makedirs("models/roster", exist_ok=True)
     session.mode = "gym"
 
-    # Use provided weights or translate prompt if provided
+    # Translate prompt to combat reward weights
     weights = req.weights
     if not weights and req.prompt:
         trans = translate_training_prompt(req.prompt)
         weights = trans["weights"]
-
     if not weights:
         weights = {"aggression": 0.5, "caution": 0.5, "mobility": 0.5, "stamina_conservation": 0.5}
 
-    grid_size = 8 if req.algo == "ppo" else 12
-    # Scale rewards by aggression weight to demonstrate real behavior modification
-    agg_mult = float(weights.get("aggression", 0.5)) * 2.0
-    grid = [{"id": i, "reward": round((10.0 + i * 2.5) * agg_mult, 2), "is_best": (i == grid_size - 1)} for i in range(grid_size)]
+    pop_size = 6
+    generations = max(1, req.generations)
+    max_steps = 150  # Faster matches = faster first-generation feedback
 
     session.sandbox.gym_stats = {
-        "algo": req.algo,
-        "generation": 1 if req.algo == "ga" else 0,
-        "total_timesteps": req.timesteps if req.algo == "ppo" else 0,
+        "algo": "ga_combat",
+        "generation": 0,
         "weights": weights,
-        "best_reward": max(g["reward"] for g in grid),
-        "mean_reward": sum(g["reward"] for g in grid) / len(grid),
-        "grid": grid,
-        "history": [max(g["reward"] for g in grid)],
+        "best_reward": 0.0,
+        "mean_reward": 0.0,
+        "grid": [{"id": i, "reward": 0.0, "is_best": False} for i in range(pop_size)],
+        "history": [],
+        "stopped": False,
+        "training_complete": False,
     }
-    return {"status": "ok", "algo": req.algo, "weights": weights}
+
+    t = threading.Thread(
+        target=_run_combat_gym_training,
+        args=(session.sandbox, weights, generations, pop_size, max_steps),
+        daemon=True,
+    )
+    t.start()
+
+    return {"status": "ok", "algo": "ga_combat", "generations": generations, "pop_size": pop_size, "weights": weights}
 
 
 @app.post("/api/gym/stop")
@@ -208,7 +427,34 @@ def stop_gym_training() -> dict[str, Any]:
     return {"status": "ok"}
 
 
-from web.fighter_roster import save_fighter, list_fighters, get_fighter, delete_fighter
+class GymPromoteRequest(BaseModel):
+    name: str = "Champion"
+
+
+@app.post("/api/gym/promote")
+def promote_gym_champion(req: GymPromoteRequest) -> dict[str, Any]:
+    """Save the best evolved genome as a named roster entry under models/roster/."""
+    os.makedirs("models/roster", exist_ok=True)
+
+    stats = {}
+    if hasattr(session.sandbox, "gym_stats"):
+        stats = {
+            "algo": session.sandbox.gym_stats.get("algo", "ga_combat"),
+            "best_reward": session.sandbox.gym_stats.get("best_reward", 0.0),
+            "mean_reward": session.sandbox.gym_stats.get("mean_reward", 0.0),
+            "generation": session.sandbox.gym_stats.get("generation", 0),
+        }
+
+    artifact_path = "models/combat_ga_best.npy"
+    entry = save_fighter(
+        name=req.name,
+        preset_name="robots/presets/boxer.json",
+        algo="ga",
+        artifact_path=artifact_path,
+        stats=stats,
+    )
+
+    return {"status": "ok", "saved_path": entry["artifact_path"], "fighter": entry}
 
 
 class SaveFighterRequest(BaseModel):
@@ -241,6 +487,7 @@ def start_competitive_match(req: CompetitiveStartRequest) -> dict[str, Any]:
             preset_b = f_b["preset_name"]
 
     session.arena = Arena(preset_a, preset_b)
+    session.load_controllers_for_competitive(req.fighter_a_id, req.fighter_b_id)
     session.paused = False
     return {"status": "ok", "preset_a": preset_a, "preset_b": preset_b}
 
@@ -264,20 +511,6 @@ def remove_roster_entry(fighter_id: str, delete_artifact: bool = False) -> dict[
     return {"status": "ok", "deleted": fighter_id}
 
 
-@app.post("/api/gym/promote")
-def promote_to_roster(req: PromoteRequest) -> dict[str, Any]:
-    os.makedirs("models/roster", exist_ok=True)
-    artifact_path = "models/ga_hopper_best.npy" if getattr(session.sandbox, "gym_stats", {}).get("algo") == "ga" else "models/ppo_hopper_trained.zip"
-    entry = save_fighter(
-        name=req.name,
-        preset_name="robots/presets/boxer.json",
-        algo=getattr(session.sandbox, "gym_stats", {}).get("algo", "ga"),
-        artifact_path=artifact_path,
-        stats={"best_reward": getattr(session.sandbox, "gym_stats", {}).get("best_reward", 250.0)},
-    )
-    return {"status": "ok", "saved_path": entry["artifact_path"], "fighter": entry}
-
-
 @app.post("/api/spawn_shape")
 def spawn_shape(req: SpawnShapeRequest) -> dict[str, Any]:
     body = session.sandbox.spawn_shape((req.x, req.y))
@@ -292,6 +525,7 @@ def spawn_robot(req: SpawnRobotRequest) -> dict[str, Any]:
 
 tick_debug_count = 0
 
+
 # WebSocket Endpoint for Live State Streaming
 @app.websocket("/ws/state")
 async def websocket_state(websocket: WebSocket) -> None:
@@ -299,7 +533,6 @@ async def websocket_state(websocket: WebSocket) -> None:
     await websocket.accept()
     try:
         while True:
-            session.step()
             state = encode_state(session.get_active_object(), mode=session.mode, paused=session.paused)
             if tick_debug_count < 5 and len(state.get("bodies", [])) > 0:
                 b0 = state["bodies"][0]
